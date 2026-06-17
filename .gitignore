@@ -1,0 +1,18 @@
+# Secrets
+.env
+
+# Generated data (too large / changes every run)
+db/
+reports/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db

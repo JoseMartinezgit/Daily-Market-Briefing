@@ -1,0 +1,219 @@
+{
+  "macro_drivers": {
+    "interest_rates_rising": {
+      "keywords": ["rate hike", "rate hikes", "hawkish", "tightening", "fed raises", "higher for longer", "bps hike", "basis points higher", "restrictive policy", "quantitative tightening", "qt"],
+      "bullish": [
+        {"ticker": "XLF", "name": "Financials ETF", "reason": "Banks earn wider net interest margins as deposit costs lag lending rates"},
+        {"ticker": "JPM", "name": "JPMorgan Chase", "reason": "Largest US bank directly benefits from higher net interest income"},
+        {"ticker": "GS", "name": "Goldman Sachs", "reason": "Fixed-income trading and NIM both improve in rising-rate environment"},
+        {"ticker": "BRK-B", "name": "Berkshire Hathaway", "reason": "Enormous cash pile earns more at higher short-term rates"},
+        {"ticker": "UUP", "name": "USD ETF", "reason": "Higher US rates attract foreign capital, strengthening the dollar"}
+      ],
+      "bearish": [
+        {"ticker": "XLRE", "name": "Real Estate ETF", "reason": "Higher borrowing costs raise cap rates and compress REIT valuations"},
+        {"ticker": "XLU", "name": "Utilities ETF", "reason": "Utilities compete with bonds for yield-seekers; higher bonds = lower utility demand"},
+        {"ticker": "TLT", "name": "Long-Term Treasuries", "reason": "Bond prices fall inversely to rising yields"},
+        {"ticker": "XLK", "name": "Technology ETF", "reason": "Higher discount rate compresses valuations of long-duration growth stocks"},
+        {"ticker": "ARKK", "name": "ARK Innovation", "reason": "Unprofitable high-growth tech hit hardest by rising discount rates"},
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Non-yielding asset becomes less attractive vs higher-yielding bonds"}
+      ]
+    },
+    "interest_rates_falling": {
+      "keywords": ["rate cut", "rate cuts", "dovish", "easing", "fed cuts", "lower rates", "pivot", "accommodative", "bps cut", "basis points lower", "rate pause"],
+      "bullish": [
+        {"ticker": "XLRE", "name": "Real Estate ETF", "reason": "Lower rates reduce borrowing costs, expanding REIT cap rates"},
+        {"ticker": "XLU", "name": "Utilities ETF", "reason": "Yield-seeking investors return to utilities as bond yields fall"},
+        {"ticker": "TLT", "name": "Long-Term Treasuries", "reason": "Bond prices rise as yields decline"},
+        {"ticker": "XLK", "name": "Technology ETF", "reason": "Lower discount rate boosts present value of future earnings"},
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Lower real rates reduce opportunity cost of holding gold"},
+        {"ticker": "ARKK", "name": "ARK Innovation", "reason": "Growth/speculative stocks re-rate higher with lower discount rates"}
+      ],
+      "bearish": [
+        {"ticker": "XLF", "name": "Financials ETF", "reason": "Bank NIM compresses as rates fall"},
+        {"ticker": "JPM", "name": "JPMorgan Chase", "reason": "Net interest income guidance often lowered in rate-cut cycles"},
+        {"ticker": "UUP", "name": "USD ETF", "reason": "Lower US rates reduce dollar yield advantage vs other currencies"}
+      ]
+    },
+    "inflation_rising": {
+      "keywords": ["inflation", "cpi", "pce", "consumer prices", "producer prices", "ppi", "hotter than expected", "price pressures", "cost of living", "inflationary"],
+      "bullish": [
+        {"ticker": "XLE", "name": "Energy ETF", "reason": "Energy companies are inflation beneficiaries — their commodity prices rise with CPI"},
+        {"ticker": "XLB", "name": "Materials ETF", "reason": "Raw material producers pass through inflation directly"},
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Gold is the classic inflation hedge; real rates often fall with surprise inflation"},
+        {"ticker": "USO", "name": "Oil ETF", "reason": "Oil often leads inflation; energy demand drives the index"},
+        {"ticker": "XLI", "name": "Industrials ETF", "reason": "Hard-asset businesses pass through pricing power in inflationary environments"}
+      ],
+      "bearish": [
+        {"ticker": "TLT", "name": "Long-Term Treasuries", "reason": "Inflation erodes bond real returns; market prices in more Fed hikes"},
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Consumers cut discretionary spending when inflation bites necessities"},
+        {"ticker": "XLK", "name": "Technology ETF", "reason": "Implies higher-for-longer rates; growth stock discount rates rise"}
+      ]
+    },
+    "inflation_falling": {
+      "keywords": ["disinflation", "deflation", "cooling inflation", "below expectations cpi", "inflation falls", "prices ease", "cooling prices"],
+      "bullish": [
+        {"ticker": "TLT", "name": "Long-Term Treasuries", "reason": "Disinflation signals rate cuts ahead; bond prices rally"},
+        {"ticker": "XLK", "name": "Technology ETF", "reason": "Lower inflation path = lower rates = higher growth stock multiples"},
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Real consumer purchasing power increases"}
+      ],
+      "bearish": [
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Inflation hedge less needed; real rates typically rise"},
+        {"ticker": "XLE", "name": "Energy ETF", "reason": "Commodity prices often soften in deflationary periods"}
+      ]
+    },
+    "tariffs": {
+      "keywords": ["tariff", "tariffs", "trade war", "import tax", "export controls", "trade restriction", "protectionism", "trade deficit", "customs duties"],
+      "bullish": [
+        {"ticker": "XLI", "name": "Industrials ETF", "reason": "Domestic manufacturers gain pricing protection from import competition"},
+        {"ticker": "XLB", "name": "Materials ETF", "reason": "US steel, aluminum, and materials companies benefit from import tariffs"},
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Trade uncertainty drives safe-haven demand"}
+      ],
+      "bearish": [
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Higher import prices raise costs for retailers and consumers"},
+        {"ticker": "XLK", "name": "Technology ETF", "reason": "Tech supply chains are global; tariffs disrupt chip and device manufacturing"},
+        {"ticker": "AAPL", "name": "Apple Inc.", "reason": "Heavy China manufacturing exposure makes it vulnerable to tariff escalation"},
+        {"ticker": "NVDA", "name": "NVIDIA", "reason": "Semiconductor export controls directly restrict AI chip sales to China"},
+        {"ticker": "TSM", "name": "Taiwan Semi", "reason": "US-China tensions directly threaten global semiconductor supply chains"},
+        {"ticker": "EEM", "name": "Emerging Markets ETF", "reason": "Global trade contraction hits EM exporters disproportionately"}
+      ]
+    },
+    "strong_jobs": {
+      "keywords": ["jobs beat", "nfp beat", "strong jobs", "low unemployment", "labor market tight", "payrolls above", "unemployment falls", "jobless claims fall"],
+      "bullish": [
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Employed consumers spend more on discretionary goods"},
+        {"ticker": "XLF", "name": "Financials ETF", "reason": "Low unemployment reduces credit losses at banks"},
+        {"ticker": "XLP", "name": "Consumer Staples ETF", "reason": "Steady incomes support staples spending"}
+      ],
+      "bearish": [
+        {"ticker": "TLT", "name": "Long-Term Treasuries", "reason": "Strong jobs = Fed stays hawkish; bond yields rise"},
+        {"ticker": "XLU", "name": "Utilities ETF", "reason": "Hot labor market delays rate cuts; yield competition stays elevated"}
+      ]
+    },
+    "weak_jobs": {
+      "keywords": ["jobs miss", "nfp miss", "weak jobs", "unemployment rises", "layoffs surge", "jobless claims rise", "payrolls below", "labor market weakens"],
+      "bullish": [
+        {"ticker": "TLT", "name": "Long-Term Treasuries", "reason": "Weak jobs accelerates Fed rate cut timeline; bonds rally"},
+        {"ticker": "XLU", "name": "Utilities ETF", "reason": "Rate cut expectations boost yield-sensitive utilities"},
+        {"ticker": "XLRE", "name": "Real Estate ETF", "reason": "Anticipated rate cuts lift rate-sensitive REITs"}
+      ],
+      "bearish": [
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Fewer employed consumers = less discretionary spending"},
+        {"ticker": "XLF", "name": "Financials ETF", "reason": "Rising unemployment increases credit loss provisions at banks"}
+      ]
+    },
+    "oil_rising": {
+      "keywords": ["oil rises", "crude higher", "opec cut", "opec+", "oil supply cut", "crude oil up", "wti higher", "brent higher", "energy prices rise"],
+      "bullish": [
+        {"ticker": "XLE", "name": "Energy ETF", "reason": "Direct beneficiary — oil companies' revenue rises with crude prices"},
+        {"ticker": "XOM", "name": "ExxonMobil", "reason": "Integrated major with large upstream exposure benefits from oil price rise"},
+        {"ticker": "CVX", "name": "Chevron", "reason": "Large upstream production directly leveraged to crude price"},
+        {"ticker": "USO", "name": "Oil ETF", "reason": "Tracks crude oil price directly"},
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Oil inflation often signals broader commodity inflation; gold moves in sympathy"}
+      ],
+      "bearish": [
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Higher gas prices eat into consumer discretionary budgets"},
+        {"ticker": "XLI", "name": "Industrials ETF", "reason": "Transportation and manufacturing face higher fuel costs"},
+        {"ticker": "DAL", "name": "Delta Air Lines", "reason": "Airline fuel costs are ~20% of operating expenses; oil spike hits margins"},
+        {"ticker": "AAL", "name": "American Airlines", "reason": "Same fuel cost exposure as Delta; highly leveraged to jet fuel prices"}
+      ]
+    },
+    "oil_falling": {
+      "keywords": ["oil falls", "crude lower", "oil supply glut", "opec increase", "crude oil down", "wti lower", "brent lower", "energy prices fall"],
+      "bullish": [
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Lower gas prices free up consumer spending power"},
+        {"ticker": "XLI", "name": "Industrials ETF", "reason": "Lower fuel costs improve manufacturing and transportation margins"},
+        {"ticker": "DAL", "name": "Delta Air Lines", "reason": "Fuel is the biggest cost item; oil drop directly boosts airline margins"}
+      ],
+      "bearish": [
+        {"ticker": "XLE", "name": "Energy ETF", "reason": "Direct hit to energy company revenue and earnings"},
+        {"ticker": "XOM", "name": "ExxonMobil", "reason": "Upstream production revenue falls with crude prices"},
+        {"ticker": "CVX", "name": "Chevron", "reason": "Same upstream exposure; earnings guidance typically cut on oil drops"}
+      ]
+    },
+    "geopolitical_risk": {
+      "keywords": ["war", "conflict", "military", "geopolitical", "sanctions", "nuclear", "attack", "invasion", "escalation", "crisis", "unrest"],
+      "bullish": [
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Classic safe-haven; demand spikes in geopolitical crises"},
+        {"ticker": "USO", "name": "Oil ETF", "reason": "Supply disruption fears push crude prices higher"},
+        {"ticker": "LMT", "name": "Lockheed Martin", "reason": "Defense contractors see order backlogs rise during geopolitical escalation"},
+        {"ticker": "RTX", "name": "Raytheon", "reason": "Missiles, radar systems demand rises in conflict environments"},
+        {"ticker": "NOC", "name": "Northrop Grumman", "reason": "Defense spending accelerates with geopolitical risk"},
+        {"ticker": "UUP", "name": "USD ETF", "reason": "Dollar is the global safe-haven reserve currency"}
+      ],
+      "bearish": [
+        {"ticker": "EEM", "name": "Emerging Markets ETF", "reason": "Risk-off selling hits EM hardest; capital flees to safe havens"},
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Uncertainty suppresses consumer confidence and spending"},
+        {"ticker": "XLK", "name": "Technology ETF", "reason": "Risk-off rotation away from growth assets"}
+      ]
+    },
+    "dollar_rising": {
+      "keywords": ["dollar strength", "dollar rallies", "usd up", "dollar index higher", "greenback strengthens", "dxy higher"],
+      "bullish": [
+        {"ticker": "UUP", "name": "USD ETF", "reason": "Directly tracks the US dollar index"},
+        {"ticker": "XLP", "name": "Consumer Staples ETF", "reason": "Domestic staples companies benefit from lower import costs"}
+      ],
+      "bearish": [
+        {"ticker": "EEM", "name": "Emerging Markets ETF", "reason": "EM countries with dollar-denominated debt face higher servicing costs"},
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Gold is priced in dollars; stronger dollar makes it more expensive globally"},
+        {"ticker": "AAPL", "name": "Apple Inc.", "reason": "Over 60% of revenue is international; strong dollar reduces reported earnings"},
+        {"ticker": "MSFT", "name": "Microsoft", "reason": "Large international revenue base exposed to unfavorable currency translation"}
+      ]
+    },
+    "recession_fears": {
+      "keywords": ["recession", "economic slowdown", "contraction", "negative gdp", "stagflation", "yield curve inversion", "inverted yield curve", "credit tightening", "credit crunch"],
+      "bullish": [
+        {"ticker": "GLD", "name": "Gold ETF", "reason": "Safe-haven asset; demand rises in economic downturns"},
+        {"ticker": "TLT", "name": "Long-Term Treasuries", "reason": "Flight to safety; also implies rate cuts ahead"},
+        {"ticker": "XLP", "name": "Consumer Staples ETF", "reason": "Consumers continue buying necessities regardless of economic cycle"},
+        {"ticker": "XLV", "name": "Healthcare ETF", "reason": "Healthcare spending is non-discretionary across economic cycles"},
+        {"ticker": "XLU", "name": "Utilities ETF", "reason": "Utilities are defensive; demand is stable regardless of economic conditions"}
+      ],
+      "bearish": [
+        {"ticker": "XLY", "name": "Consumer Discretionary ETF", "reason": "Consumers cut big-ticket and discretionary purchases first"},
+        {"ticker": "XLF", "name": "Financials ETF", "reason": "Rising loan losses and tighter credit conditions hurt bank earnings"},
+        {"ticker": "XLI", "name": "Industrials ETF", "reason": "Capital expenditure and manufacturing orders fall in recession"},
+        {"ticker": "XLE", "name": "Energy ETF", "reason": "Demand destruction reduces oil and energy consumption"},
+        {"ticker": "SMH", "name": "Semiconductor ETF", "reason": "Chip demand falls as businesses cut IT and consumer spending"}
+      ]
+    }
+  },
+  "sector_etfs": {
+    "XLK": {"name": "Technology", "full_name": "Technology Select Sector SPDR", "color": "#3B82F6"},
+    "XLF": {"name": "Financials", "full_name": "Financial Select Sector SPDR", "color": "#10B981"},
+    "XLE": {"name": "Energy", "full_name": "Energy Select Sector SPDR", "color": "#F59E0B"},
+    "XLV": {"name": "Healthcare", "full_name": "Healthcare Select Sector SPDR", "color": "#EC4899"},
+    "XLI": {"name": "Industrials", "full_name": "Industrial Select Sector SPDR", "color": "#8B5CF6"},
+    "XLY": {"name": "Cons. Disc.", "full_name": "Consumer Discret. Select Sector SPDR", "color": "#F97316"},
+    "XLP": {"name": "Cons. Stpls", "full_name": "Consumer Staples Select Sector SPDR", "color": "#84CC16"},
+    "XLU": {"name": "Utilities", "full_name": "Utilities Select Sector SPDR", "color": "#06B6D4"},
+    "XLRE": {"name": "Real Estate", "full_name": "Real Estate Select Sector SPDR", "color": "#A78BFA"},
+    "XLB": {"name": "Materials", "full_name": "Materials Select Sector SPDR", "color": "#D97706"},
+    "XLC": {"name": "Comm. Svcs", "full_name": "Communication Services Select Sector SPDR", "color": "#EF4444"}
+  },
+  "company_to_sector": {
+    "AAPL": "XLK", "MSFT": "XLK", "NVDA": "XLK", "AMD": "XLK", "INTC": "XLK",
+    "QCOM": "XLK", "AVGO": "XLK", "TSM": "XLK", "ASML": "XLK", "MU": "XLK",
+    "AMAT": "XLK", "KLAC": "XLK", "LRCX": "XLK", "MRVL": "XLK",
+    "JPM": "XLF", "BAC": "XLF", "GS": "XLF", "MS": "XLF", "WFC": "XLF",
+    "C": "XLF", "V": "XLF", "MA": "XLF", "AXP": "XLF", "BRK-B": "XLF",
+    "BLK": "XLF", "SCHW": "XLF", "COF": "XLF", "USB": "XLF",
+    "XOM": "XLE", "CVX": "XLE", "COP": "XLE", "PSX": "XLE", "VLO": "XLE",
+    "MPC": "XLE", "OXY": "XLE", "SLB": "XLE", "HAL": "XLE",
+    "UNH": "XLV", "JNJ": "XLV", "LLY": "XLV", "MRK": "XLV", "ABBV": "XLV",
+    "PFE": "XLV", "TMO": "XLV", "ABT": "XLV", "CVS": "XLV", "AMGN": "XLV",
+    "CAT": "XLI", "HON": "XLI", "UPS": "XLI", "BA": "XLI", "GE": "XLI",
+    "RTX": "XLI", "LMT": "XLI", "NOC": "XLI", "DE": "XLI", "MMM": "XLI",
+    "AMZN": "XLY", "TSLA": "XLY", "HD": "XLY", "MCD": "XLY", "NKE": "XLY",
+    "LOW": "XLY", "TGT": "XLY", "SBUX": "XLY", "GM": "XLY", "F": "XLY",
+    "WMT": "XLP", "PG": "XLP", "KO": "XLP", "PEP": "XLP", "COST": "XLP",
+    "PM": "XLP", "MO": "XLP", "CL": "XLP", "MDLZ": "XLP",
+    "NEE": "XLU", "DUK": "XLU", "SO": "XLU", "D": "XLU", "EXC": "XLU",
+    "AMT": "XLRE", "PLD": "XLRE", "EQIX": "XLRE", "CCI": "XLRE", "O": "XLRE",
+    "FCX": "XLB", "NEM": "XLB", "DOW": "XLB", "LIN": "XLB", "APD": "XLB",
+    "META": "XLC", "GOOGL": "XLC", "GOOG": "XLC", "NFLX": "XLC",
+    "TMUS": "XLC", "VZ": "XLC", "T": "XLC", "DIS": "XLC", "CMCSA": "XLC",
+    "CRM": "XLK", "ORCL": "XLK", "IBM": "XLK", "SAP": "XLK", "NOW": "XLK",
+    "ADBE": "XLK", "PYPL": "XLK", "SQ": "XLK", "COIN": "XLF",
+    "UBER": "XLY", "LYFT": "XLY", "ABNB": "XLY", "BKNG": "XLY"
+  }
+}

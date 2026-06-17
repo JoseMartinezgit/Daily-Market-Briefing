@@ -1,0 +1,139 @@
+# ============================================================
+#  Daily Market Briefing — Configuration
+# ============================================================
+
+# Timezone for event display (IANA name)
+timezone: America/Chicago   # Central Time
+
+# --- News sources (set to false to disable) -----------------
+sources:
+  rss_reuters: true
+  rss_cnbc: true
+  rss_marketwatch: true
+  rss_yahoo_finance: true
+  rss_fed: true
+  rss_sec: true
+  rss_seeking_alpha: true
+  api_finnhub: true          # requires FINNHUB_API_KEY
+  api_newsapi: true          # requires NEWS_API_KEY
+  api_alpha_vantage: true    # requires ALPHA_VANTAGE_KEY
+  api_marketaux: true        # requires MARKETAUX_API_KEY
+
+# --- Cache TTL (seconds) ------------------------------------
+cache:
+  market_data_ttl: 900       # 15 min
+  news_ttl: 900
+  events_ttl: 3600           # 1 hour
+
+# --- Sentiment weights for day verdict ----------------------
+sentiment_weights:
+  market_indices: 0.40       # index price changes
+  vix: 0.20                  # VIX level + change
+  news_sentiment: 0.30       # aggregate news scores
+  breadth: 0.10              # sector ETF dispersion
+
+# --- Keyword alerts (pin matching stories to top) -----------
+keyword_alerts:
+  - tariff
+  - NVDA
+  - rate cut
+  - rate hike
+  - recession
+  - fed
+  - nvidia
+  - apple
+  - tesla
+  - earnings
+
+# --- Watchlist tickers (always track these) -----------------
+watchlist:
+  - AAPL
+  - MSFT
+  - NVDA
+  - AMZN
+  - GOOGL
+  - META
+  - TSLA
+  - JPM
+  - V
+  - BRK-B
+
+# --- Sector ETFs for heatmap --------------------------------
+sector_etfs:
+  - XLK    # Technology
+  - XLF    # Financials
+  - XLE    # Energy
+  - XLV    # Healthcare
+  - XLI    # Industrials
+  - XLY    # Consumer Discretionary
+  - XLP    # Consumer Staples
+  - XLU    # Utilities
+  - XLRE   # Real Estate
+  - XLB    # Materials
+  - XLC    # Communication Services
+
+# --- Market symbols for snapshot ----------------------------
+market_symbols:
+  indices:
+    - symbol: "^GSPC"
+      name: "S&P 500"
+    - symbol: "^IXIC"
+      name: "Nasdaq"
+    - symbol: "^DJI"
+      name: "Dow Jones"
+    - symbol: "^RUT"
+      name: "Russell 2000"
+    - symbol: "^VIX"
+      name: "VIX"
+  commodities:
+    - symbol: "GC=F"
+      name: "Gold"
+    - symbol: "CL=F"
+      name: "Crude Oil"
+    - symbol: "BTC-USD"
+      name: "Bitcoin"
+    - symbol: "DX-Y.NYB"
+      name: "USD Index"
+  yields:
+    - symbol: "^TNX"
+      name: "10Y Treasury"
+    - symbol: "^TYX"
+      name: "30Y Treasury"
+    - symbol: "^IRX"
+      name: "13W T-Bill"
+
+# --- Report schedule ----------------------------------------
+# Set to a time string like "08:00" to auto-generate daily
+report_schedule: ""
+
+# --- Notable earnings tickers (checked for upcoming earnings)
+earnings_watchlist:
+  - AAPL
+  - MSFT
+  - NVDA
+  - AMZN
+  - GOOGL
+  - META
+  - TSLA
+  - JPM
+  - BAC
+  - GS
+  - MS
+  - V
+  - MA
+  - WMT
+  - HD
+  - UNH
+  - JNJ
+  - XOM
+  - CVX
+  - AMD
+  - INTC
+  - QCOM
+  - NFLX
+  - DIS
+  - PYPL
+  - UBER
+  - LYFT
+  - COIN
+  - SOFI

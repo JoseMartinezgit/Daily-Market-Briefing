@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Market Briefing</title>
+<link rel="icon" href="data:,">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        surface: '#0f1117',
+        panel: '#161b27',
+        border: '#1e2535',
+        muted: '#8892a4',
+      }
+    }
+  }
+}
+</script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { background: #0f1117; color: #e2e8f0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0f1117; }
+  ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 3px; }
+  .panel { background: #161b27; border: 1px solid #1e2535; border-radius: 8px; }
+  .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; }
+  .badge-high { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-medium { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .badge-low { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .badge-bullish { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .badge-bearish { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-neutral { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.3); }
+  .badge-volatile { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .badge-pinned { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.4); }
+  .up { color: #4ade80; }
+  .down { color: #f87171; }
+  .neutral-val { color: #94a3b8; }
+  .ticker-chip { display: inline-flex; align-items: center; gap: 3px; background: #1e2535; border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 600; font-family: monospace; }
+  .ticker-chip.up { color: #4ade80; background: rgba(34,197,94,0.1); }
+  .ticker-chip.down { color: #f87171; background: rgba(239,68,68,0.1); }
+  .tab { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; color: #8892a4; }
+  .tab:hover { color: #e2e8f0; background: #1e2535; }
+  .tab.active { color: #e2e8f0; background: #1e2535; }
+  .news-card { border-bottom: 1px solid #1e2535; padding: 12px 0; }
+  .news-card:last-child { border-bottom: none; }
+  .event-item { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #1e2535; }
+  .event-item:last-child { border-bottom: none; }
+  .event-time { font-family: monospace; font-size: 11px; color: #60a5fa; min-width: 80px; padding-top: 2px; }
+  .event-past .event-time { color: #4b5563; text-decoration: line-through; }
+  .event-past .event-title { color: #4b5563; }
+  .heatmap-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; padding: 8px 4px; font-size: 11px; font-weight: 600; transition: transform 0.1s; cursor: default; }
+  .heatmap-cell:hover { transform: scale(1.05); }
+  .verdict-banner { border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .verdict-BULLISH { background: linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(21,128,61,0.1) 100%); border: 1px solid rgba(34,197,94,0.3); }
+  .verdict-BEARISH { background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(153,27,27,0.1) 100%); border: 1px solid rgba(239,68,68,0.3); }
+  .verdict-VOLATILE { background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(146,64,14,0.1) 100%); border: 1px solid rgba(245,158,11,0.3); }
+  .verdict-MIXED { background: linear-gradient(135deg, rgba(100,116,139,0.15) 0%, rgba(51,65,85,0.1) 100%); border: 1px solid rgba(100,116,139,0.3); }
+  .loading-pulse { animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .nav-tab { padding: 8px 16px; font-size: 13px; font-weight: 500; color: #8892a4; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .nav-tab:hover { color: #e2e8f0; }
+  .nav-tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .snapshot-card { background: #161b27; border: 1px solid #1e2535; border-radius: 8px; padding: 12px 14px; }
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  .risk-item { padding: 10px 14px; background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); border-radius: 6px; margin-bottom: 8px; font-size: 13px; color: #fde68a; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- TOP NAV -->
+<nav style="background:#0d1120;border-bottom:1px solid #1e2535;position:sticky;top:0;z-index:50;">
+  <div class="max-w-screen-2xl mx-auto px-4 flex items-center justify-between h-12">
+    <div class="flex items-center gap-6">
+      <span class="font-bold text-sm tracking-widest text-blue-400" style="letter-spacing:0.15em;">MARKET BRIEFING</span>
+      <div class="flex">
+        <div class="nav-tab active" onclick="switchPage('dashboard',this)">Dashboard</div>
+        <div class="nav-tab" onclick="switchPage('reports',this)">Reports</div>
+        <div class="nav-tab" onclick="switchPage('history',this)">History</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="last-updated" class="text-xs" style="color:#4b5563;">Loading…</span>
+      <button id="refresh-btn" onclick="triggerRefresh()" class="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all" style="background:#1e2535;color:#94a3b8;border:1px solid #2d3748;">
+        <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-3.1"></path></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTAINER -->
+<div class="max-w-screen-2xl mx-auto px-4 py-4">
+
+  <!-- LOADING OVERLAY -->
+  <div id="loading-overlay" class="panel p-8 text-center loading-pulse mb-4">
+    <div class="text-blue-400 font-semibold mb-2">Fetching market data…</div>
+    <div class="text-xs" style="color:#4b5563;">Pulling news feeds, market quotes, and events</div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- DASHBOARD PAGE -->
+  <!-- ====================================================================== -->
+  <div id="page-dashboard" class="page active" style="display:none;">
+
+    <!-- VERDICT BANNER -->
+    <div id="verdict-banner" class="verdict-banner verdict-MIXED mb-4">
+      <div class="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <span id="verdict-emoji" class="text-3xl">⚪</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="verdict-label" class="text-2xl font-black tracking-wider">MIXED</span>
+                <span id="verdict-confidence" class="text-sm font-semibold px-2 py-0.5 rounded" style="background:rgba(255,255,255,0.1);">—%</span>
+              </div>
+              <div id="verdict-premarket" class="text-xs mt-0.5" style="color:#fbbf24;display:none;">PRE-MARKET ASSESSMENT</div>
+            </div>
+          </div>
+          <p id="verdict-justification" class="text-sm" style="color:#cbd5e1;max-width:720px;"></p>
+        </div>
+        <div class="text-right text-xs" style="color:#4b5563;">
+          <div id="verdict-time"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKET SNAPSHOT ROW -->
+    <div id="snapshot-row" class="grid gap-3 mb-4" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));">
+    </div>
+
+    <!-- SECTOR HEATMAP + RISKS -->
+    <div class="grid gap-4 mb-4" style="grid-template-columns:2fr 1fr;">
+      <div class="panel p-4">
+        <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">SECTOR HEATMAP</div>
+        <div id="heatmap-grid" class="grid gap-2" style="grid-template-columns:repeat(4,1fr);"></div>
+      </div>
+      <div class="panel p-4">
+        <div class="text-xs font-semibold mb-3" style="color:#f59e0b;letter-spacing:0.1em;">⚠ RISKS TO WATCH</div>
+        <div id="risks-container"></div>
+      </div>
+    </div>
+
+    <!-- MAIN TWO-COLUMN LAYOUT -->
+    <div class="grid gap-4" style="grid-template-columns:3fr 2fr;">
+
+      <!-- LEFT: NEWS FEED -->
+      <div class="panel p-4">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div class="text-xs font-semibold" style="color:#60a5fa;letter-spacing:0.1em;">NEWS FEED</div>
+          <div class="flex gap-1 flex-wrap" id="news-tabs">
+            <div class="tab active" onclick="filterNews('All',this)">All</div>
+            <div class="tab" onclick="filterNews('Macro',this)">Macro</div>
+            <div class="tab" onclick="filterNews('Political',this)">Political</div>
+            <div class="tab" onclick="filterNews('Deals',this)">Deals</div>
+            <div class="tab" onclick="filterNews('Earnings',this)">Earnings</div>
+            <div class="tab" onclick="filterNews('Sector',this)">Sector</div>
+          </div>
+        </div>
+        <div id="news-feed" class="overflow-y-auto" style="max-height:70vh;"></div>
+      </div>
+
+      <!-- RIGHT: TIMELINE + WATCHLIST -->
+      <div class="flex flex-col gap-4">
+
+        <!-- EVENT TIMELINE -->
+        <div class="panel p-4" style="max-height:45vh;overflow-y:auto;">
+          <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">EVENT TIMELINE</div>
+          <div id="event-timeline"></div>
+        </div>
+
+        <!-- WATCHLIST -->
+        <div class="panel p-4">
+          <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">TODAY'S WATCHLIST</div>
+          <div id="watchlist-container"></div>
+        </div>
+
+        <!-- EARNINGS REACTIONS -->
+        <div id="earnings-panel" class="panel p-4" style="display:none;">
+          <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">RECENT EARNINGS REACTIONS</div>
+          <div id="earnings-container"></div>
+        </div>
+
+      </div>
+    </div><!-- end two-col -->
+
+    <!-- SOURCES STATUS -->
+    <div id="sources-bar" class="mt-3 flex flex-wrap gap-2"></div>
+
+  </div><!-- end dashboard page -->
+
+  <!-- ====================================================================== -->
+  <!-- REPORTS PAGE -->
+  <!-- ====================================================================== -->
+  <div id="page-reports" class="page">
+    <div class="panel p-4">
+      <div class="text-xs font-semibold mb-4" style="color:#60a5fa;letter-spacing:0.1em;">SAVED REPORTS</div>
+      <div id="reports-list" class="mb-4"></div>
+      <div id="report-viewer" class="prose prose-invert max-w-none" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- HISTORY PAGE -->
+  <!-- ====================================================================== -->
+  <div id="page-history" class="page">
+    <div class="grid gap-4" style="grid-template-columns:1fr 1fr;">
+      <div class="panel p-4">
+        <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">DAILY VERDICT HISTORY</div>
+        <canvas id="verdict-chart" height="200"></canvas>
+      </div>
+      <div class="panel p-4">
+        <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">VIX OVER TIME</div>
+        <canvas id="vix-chart" height="200"></canvas>
+      </div>
+    </div>
+    <div class="panel p-4 mt-4">
+      <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">S&P 500 DAILY CHANGE HISTORY</div>
+      <canvas id="sp500-chart" height="120"></canvas>
+    </div>
+  </div>
+
+</div><!-- end max-w container -->
+
+<!-- FOOTER -->
+<footer class="mt-8 py-4 text-center text-xs" style="color:#374151;border-top:1px solid #1e2535;">
+  Daily Market Briefing &nbsp;·&nbsp; Informational only — not financial advice &nbsp;·&nbsp;
+  All data sourced from public APIs and RSS feeds
+</footer>
+
+<!-- ========================================================================
+     JAVASCRIPT
+     ======================================================================== -->
+<script>
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+let dashboardData = null;
+let allNews = [];
+let currentNewsFilter = 'All';
+let refreshInterval = null;
+let verdictChart = null, vixChart = null, sp500Chart = null;
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard();
+  loadReports();
+  // Auto-poll while loading
+  const pollTimer = setInterval(() => {
+    if (!dashboardData) loadDashboard();
+    else clearInterval(pollTimer);
+  }, 4000);
+});
+
+// ---------------------------------------------------------------------------
+// Page navigation
+// ---------------------------------------------------------------------------
+function switchPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'history') loadHistory();
+  if (name === 'reports') loadReports();
+}
+
+// ---------------------------------------------------------------------------
+// Data fetching
+// ---------------------------------------------------------------------------
+async function loadDashboard() {
+  let data;
+  try {
+    const res = await fetch('/api/dashboard');
+    data = await res.json();
+  } catch (e) {
+    console.error('Dashboard fetch failed:', e);
+    showLoading('Connection error — retrying…');
+    return;
+  }
+  if (data.loading) {
+    showLoading(data.message || 'Loading…');
+    return;
+  }
+  dashboardData = data;
+  allNews = data.news || [];
+  hideLoading();
+  try {
+    renderAll(data);
+  } catch (e) {
+    console.error('Render error:', e);
+  }
+}
+
+async function triggerRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  btn.disabled = true;
+  icon.classList.add('spin');
+  btn.style.opacity = '0.6';
+  try {
+    await fetch('/api/refresh', { method: 'POST' });
+    // Poll for completion
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      const res = await fetch('/api/status');
+      const s = await res.json();
+      if (!s.is_refreshing || attempts > 40) {
+        clearInterval(poll);
+        icon.classList.remove('spin');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        await loadDashboard();
+      }
+    }, 2500);
+  } catch (e) {
+    icon.classList.remove('spin');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Render all sections
+// ---------------------------------------------------------------------------
+function renderAll(data) {
+  renderVerdict(data.verdict || {});
+  renderSnapshot(data.market_snapshot || []);
+  renderHeatmap(data.sector_heatmap || []);
+  renderNews(allNews, currentNewsFilter);
+  renderEvents(data.events || []);
+  renderWatchlist(data.watchlist || []);
+  renderEarningsReactions(data.earnings_reactions || []);
+  renderRisks(data.verdict, data.events || [], data.news || []);
+  renderSourcesBar(data.sources_status || {}, data.failed_sources || []);
+  updateLastUpdated(data.last_updated);
+}
+
+// ---------------------------------------------------------------------------
+// Verdict
+// ---------------------------------------------------------------------------
+const VERDICT_META = {
+  BULLISH:  { emoji:'🟢', color:'#4ade80', bg:'verdict-BULLISH' },
+  BEARISH:  { emoji:'🔴', color:'#f87171', bg:'verdict-BEARISH' },
+  VOLATILE: { emoji:'🟡', color:'#fbbf24', bg:'verdict-VOLATILE' },
+  MIXED:    { emoji:'⚪', color:'#94a3b8', bg:'verdict-MIXED' },
+};
+
+function renderVerdict(v) {
+  const verdict = v.verdict || 'MIXED';
+  const meta = VERDICT_META[verdict] || VERDICT_META.MIXED;
+  const banner = document.getElementById('verdict-banner');
+  banner.className = `verdict-banner ${meta.bg} mb-4`;
+  document.getElementById('verdict-emoji').textContent = meta.emoji;
+  document.getElementById('verdict-label').textContent = verdict;
+  document.getElementById('verdict-label').style.color = meta.color;
+  document.getElementById('verdict-confidence').textContent = (v.confidence || 0) + '%';
+  document.getElementById('verdict-justification').textContent = v.justification || '';
+  if (v.is_premarket) document.getElementById('verdict-premarket').style.display = '';
+  if (v.computed_at) {
+    const dt = new Date(v.computed_at + 'Z');
+    document.getElementById('verdict-time').textContent = 'as of ' + dt.toLocaleTimeString('en-US', {timeZone:'America/Chicago', hour:'2-digit', minute:'2-digit', timeZoneName:'short'});
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Market Snapshot
+// ---------------------------------------------------------------------------
+function fmtPrice(p) {
+  if (p == null) return '—';
+  if (p >= 1000) return p.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  if (p < 1) return p.toFixed(4);
+  return p.toFixed(2);
+}
+
+function fmtPct(p) {
+  if (p == null) return '—';
+  const sign = p >= 0 ? '+' : '';
+  return sign + p.toFixed(2) + '%';
+}
+
+function renderSnapshot(snap) {
+  const row = document.getElementById('snapshot-row');
+  const priority = ['^GSPC','^IXIC','^DJI','^RUT','^VIX','GC=F','CL=F','BTC-USD','^TNX'];
+  const ordered = [...snap].sort((a,b) => {
+    const ai = priority.indexOf(a.symbol), bi = priority.indexOf(b.symbol);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+  // Show first 8 most important
+  const main = ordered.filter(s => s.data_type !== 'sector_etf').slice(0,10);
+  row.innerHTML = main.map(s => {
+    const chg = s.change_pct;
+    const cls = chg > 0 ? 'up' : chg < 0 ? 'down' : 'neutral-val';
+    const arrow = chg > 0 ? '▲' : chg < 0 ? '▼' : '—';
+    return `<div class="snapshot-card">
+      <div class="text-xs font-mono font-bold mb-1" style="color:#94a3b8;">${s.symbol}</div>
+      <div class="text-base font-bold mb-0.5">${fmtPrice(s.price)}</div>
+      <div class="text-xs font-semibold ${cls}">${arrow} ${fmtPct(chg)}</div>
+      <div class="text-xs mt-0.5 truncate" style="color:#4b5563;">${s.name}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Sector Heatmap
+// ---------------------------------------------------------------------------
+function heatmapColor(pct) {
+  if (pct == null) return '#1e2535';
+  if (pct >= 2) return 'rgba(34,197,94,0.6)';
+  if (pct >= 1) return 'rgba(34,197,94,0.35)';
+  if (pct >= 0.3) return 'rgba(34,197,94,0.2)';
+  if (pct > -0.3) return 'rgba(100,116,139,0.25)';
+  if (pct > -1) return 'rgba(239,68,68,0.2)';
+  if (pct > -2) return 'rgba(239,68,68,0.4)';
+  return 'rgba(239,68,68,0.65)';
+}
+
+function renderHeatmap(sectors) {
+  const grid = document.getElementById('heatmap-grid');
+  if (!sectors.length) { grid.innerHTML = '<div class="text-xs" style="color:#4b5563;">No sector data</div>'; return; }
+  grid.innerHTML = sectors.map(s => {
+    const cls = s.change_pct > 0 ? 'up' : s.change_pct < 0 ? 'down' : 'neutral-val';
+    const bg = heatmapColor(s.change_pct);
+    return `<div class="heatmap-cell" style="background:${bg};">
+      <div class="font-bold font-mono text-xs">${s.etf}</div>
+      <div class="text-xs mt-0.5 ${cls} font-semibold">${fmtPct(s.change_pct)}</div>
+      <div style="font-size:9px;color:#6b7280;margin-top:2px;">${s.name}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// News Feed
+// ---------------------------------------------------------------------------
+function filterNews(cat, el) {
+  currentNewsFilter = cat;
+  document.querySelectorAll('#news-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderNews(allNews, cat);
+}
+
+function renderNews(news, filter) {
+  const feed = document.getElementById('news-feed');
+  let items = news;
+  if (filter && filter !== 'All') {
+    items = news.filter(n => n.category === filter);
+  }
+  if (!items.length) {
+    feed.innerHTML = '<div class="text-xs py-4 text-center" style="color:#4b5563;">No news in this category</div>';
+    return;
+  }
+  feed.innerHTML = items.map(n => renderNewsCard(n)).join('');
+}
+
+function renderNewsCard(n) {
+  const sLabel = n.sentiment_label || 'neutral';
+  const iLabel = n.impact_level || 'Low';
+  const pubDate = n.published_at ? new Date(n.published_at) : null;
+  const timeStr = pubDate ? pubDate.toLocaleTimeString('en-US', {timeZone:'America/Chicago', hour:'2-digit', minute:'2-digit', timeZoneName:'short'}) : '';
+  const tickers = (n.tickers || []).slice(0,4).map(t => {
+    const cls = t.direction === 'up' ? 'up' : t.direction === 'down' ? 'down' : '';
+    const arrow = t.direction === 'up' ? '▲' : t.direction === 'down' ? '▼' : '';
+    return `<span class="ticker-chip ${cls}">${t.ticker} ${arrow}</span>`;
+  }).join(' ');
+
+  const pinBadge = n.is_pinned ? `<span class="badge badge-pinned mr-1">📌 ALERT</span>` : '';
+
+  return `<div class="news-card ${n.is_pinned ? 'border-l-2 border-purple-500 pl-3' : ''}">
+    <div class="flex flex-wrap items-start gap-2 mb-1">
+      ${pinBadge}
+      <span class="badge badge-${iLabel.toLowerCase()}">${iLabel}</span>
+      <span class="badge badge-${sLabel}">${sLabel.toUpperCase()}</span>
+      <span class="badge" style="background:rgba(30,37,53,0.8);color:#4b6380;border:none;">${n.category || ''}</span>
+    </div>
+    <a href="${n.url}" target="_blank" rel="noopener" class="block text-sm font-semibold leading-snug hover:text-blue-400 transition-colors mb-1" style="color:#e2e8f0;">${escHtml(n.title)}</a>
+    ${n.summary ? `<p class="text-xs mb-2" style="color:#6b7280;">${escHtml(n.summary.substring(0,220))}${n.summary.length > 220 ? '…' : ''}</p>` : ''}
+    <div class="flex flex-wrap items-center gap-2 text-xs" style="color:#4b5563;">
+      <span>${escHtml(n.source || '')}</span>
+      ${timeStr ? `<span>·</span><span>${timeStr}</span>` : ''}
+      ${tickers ? `<span>·</span><div class="flex flex-wrap gap-1">${tickers}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Event Timeline
+// ---------------------------------------------------------------------------
+const IMPACT_DOT = { High:'🔴', Medium:'🟡', Low:'🔵' };
+const CAT_ICON = { FOMC:'🏦', Earnings:'💰', Economic:'📊', Political:'🏛️', OPEX:'📅' };
+
+function renderEvents(events) {
+  const tl = document.getElementById('event-timeline');
+  if (!events.length) { tl.innerHTML = '<div class="text-xs" style="color:#4b5563;">No events found</div>'; return; }
+
+  const today = new Date().toISOString().split('T')[0];
+  let html = '';
+  let lastDate = '';
+
+  for (const e of events) {
+    if (e.event_date !== lastDate) {
+      const label = e.event_date === today ? '<span style="color:#60a5fa;font-weight:700;">TODAY</span>' : `<span style="color:#4b5563;">${e.event_date}</span>`;
+      html += `<div class="text-xs font-bold mt-3 mb-1">${label}</div>`;
+      lastDate = e.event_date;
+    }
+    const dot = IMPACT_DOT[e.impact_level] || '🔵';
+    const catIcon = CAT_ICON[e.category] || '📋';
+    const assets = (e.affected_assets || []).slice(0,4).map(a => `<span class="ticker-chip">${a}</span>`).join(' ');
+    const pastClass = e.is_past ? 'event-past' : '';
+    html += `<div class="event-item ${pastClass}">
+      <div class="event-time">${e.event_time_ct || 'TBD'}</div>
+      <div class="flex-1">
+        <div class="event-title text-xs font-semibold mb-0.5" style="color:${e.is_past ? '#4b5563' : '#e2e8f0'};">${dot} ${catIcon} ${escHtml(e.title)}</div>
+        ${e.description && !e.is_past ? `<p style="font-size:10px;color:#4b5563;margin-bottom:3px;">${escHtml(e.description.substring(0,120))}</p>` : ''}
+        ${assets ? `<div class="flex flex-wrap gap-1">${assets}</div>` : ''}
+      </div>
+    </div>`;
+  }
+  tl.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Watchlist
+// ---------------------------------------------------------------------------
+function renderWatchlist(watchlist) {
+  const el = document.getElementById('watchlist-container');
+  if (!watchlist.length) { el.innerHTML = '<div class="text-xs" style="color:#4b5563;">No watchlist data</div>'; return; }
+
+  el.innerHTML = watchlist.map(w => {
+    const chgCls = (w.change_pct || 0) > 0 ? 'up' : (w.change_pct || 0) < 0 ? 'down' : 'neutral-val';
+    const arrow = (w.change_pct || 0) > 0 ? '▲' : (w.change_pct || 0) < 0 ? '▼' : '—';
+    const sentBadge = `<span class="badge badge-${w.sentiment_label || 'neutral'}" style="font-size:9px;">${(w.sentiment_label || 'neutral').toUpperCase()}</span>`;
+    const mentionBadge = w.mentions > 0 ? `<span class="text-xs" style="color:#4b5563;">${w.mentions} mention${w.mentions !== 1 ? 's' : ''}</span>` : '';
+    return `<div class="flex items-center justify-between py-2" style="border-bottom:1px solid #1e2535;">
+      <div class="flex items-center gap-2">
+        <span class="font-mono font-bold text-xs" style="min-width:48px;">${w.ticker}</span>
+        <span class="text-xs" style="color:#6b7280;">${(w.name || '').substring(0,14)}</span>
+        ${sentBadge}
+        ${mentionBadge}
+      </div>
+      <div class="text-right">
+        <div class="text-xs font-semibold">${fmtPrice(w.price)}</div>
+        <div class="text-xs font-semibold ${chgCls}">${arrow} ${fmtPct(w.change_pct)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Earnings Reactions
+// ---------------------------------------------------------------------------
+function renderEarningsReactions(reactions) {
+  const panel = document.getElementById('earnings-panel');
+  const el = document.getElementById('earnings-container');
+  if (!reactions || !reactions.length) { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  el.innerHTML = reactions.map(r => {
+    const surprise = r.surprise_pct != null ? (r.surprise_pct >= 0 ? `<span class="up">+${r.surprise_pct.toFixed(1)}% beat</span>` : `<span class="down">${r.surprise_pct.toFixed(1)}% miss</span>`) : '';
+    const rxn = r.price_reaction != null ? (r.price_reaction >= 0 ? `<span class="up">▲${r.price_reaction.toFixed(1)}%</span>` : `<span class="down">▼${Math.abs(r.price_reaction).toFixed(1)}%</span>`) : '';
+    return `<div class="flex items-center justify-between py-1.5" style="border-bottom:1px solid #1e2535;font-size:12px;">
+      <div><span class="font-mono font-bold">${r.ticker}</span> <span style="color:#6b7280;">${r.date}</span></div>
+      <div class="flex gap-3 items-center">${surprise} ${rxn ? `<span style="color:#4b5563;">→</span> ${rxn}` : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Risks to Watch
+// ---------------------------------------------------------------------------
+function renderRisks(verdict, events, news) {
+  const el = document.getElementById('risks-container');
+  const risks = [];
+
+  const vix = verdict && verdict.vix;
+  if (vix && vix > 22) risks.push(`VIX at ${vix.toFixed(1)} — elevated volatility; unexpected news could accelerate moves.`);
+
+  const today = new Date().toISOString().split('T')[0];
+  const now_hour = new Date().getHours();
+  const upcomingHigh = events.filter(e => e.event_date === today && !e.is_past && e.impact_level === 'High');
+  upcomingHigh.slice(0,2).forEach(e => risks.push(`${e.title} at ${e.event_time_ct} could reverse current direction.`));
+
+  const bearishCount = news.filter(n => n.sentiment_label === 'bearish').length;
+  const total = news.length;
+  if (total > 0 && bearishCount / total > 0.55) {
+    risks.push(`News sentiment heavily bearish (${bearishCount}/${total} stories). Watch for sentiment-driven selling.`);
+  }
+
+  const bullishCount = news.filter(n => n.sentiment_label === 'bullish').length;
+  if (total > 0 && bullishCount / total > 0.65) {
+    risks.push(`News unusually bullish (${bullishCount}/${total}). Sentiment may be ahead of fundamentals — watch for reversal.`);
+  }
+
+  if (!risks.length) risks.push('No elevated risks identified from current data.');
+
+  el.innerHTML = risks.slice(0,3).map(r => `<div class="risk-item">⚠ ${escHtml(r)}</div>`).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Sources status bar
+// ---------------------------------------------------------------------------
+function renderSourcesBar(status, failed) {
+  const bar = document.getElementById('sources-bar');
+  const items = Object.entries(status).map(([k,v]) => {
+    const dot = v ? `<span class="up">●</span>` : `<span class="down">●</span>`;
+    return `<span class="text-xs" style="color:#4b5563;">${dot} ${k}</span>`;
+  });
+  if (failed.length) {
+    items.push(`<span class="text-xs" style="color:#4b5563;">| Failed: ${failed.slice(0,3).join(', ')}</span>`);
+  }
+  bar.innerHTML = items.join(' ');
+}
+
+// ---------------------------------------------------------------------------
+// Reports page
+// ---------------------------------------------------------------------------
+async function loadReports() {
+  const el = document.getElementById('reports-list');
+  if (!el) return;
+  try {
+    const res = await fetch('/api/reports');
+    const data = await res.json();
+    if (!data.length) {
+      el.innerHTML = '<div class="text-xs" style="color:#4b5563;">No reports yet. Run the app to generate today\'s report.</div>';
+      return;
+    }
+    const verdictMeta = { BULLISH:'text-green-400', BEARISH:'text-red-400', VOLATILE:'text-yellow-400', MIXED:'text-gray-400' };
+    el.innerHTML = data.map(r => `
+      <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid #1e2535;">
+        <div class="flex items-center gap-3">
+          <span class="font-mono text-sm">${r.date_str}</span>
+          <span class="text-xs font-semibold ${verdictMeta[r.verdict] || 'text-gray-400'}">${r.verdict}</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="viewReport('${r.date_str}')" class="text-xs px-3 py-1 rounded" style="background:#1e2535;color:#94a3b8;">View</button>
+          <a href="/api/export/${r.date_str}" download class="text-xs px-3 py-1 rounded" style="background:#1e2535;color:#94a3b8;">↓ MD</a>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="text-xs" style="color:#4b5563;">Could not load reports</div>';
+  }
+}
+
+async function viewReport(dateStr) {
+  const viewer = document.getElementById('report-viewer');
+  viewer.style.display = 'block';
+  viewer.innerHTML = '<div class="text-xs loading-pulse" style="color:#4b5563;">Loading report…</div>';
+  try {
+    const res = await fetch(`/api/reports/${dateStr}`);
+    const md = await res.text();
+    // Simple markdown render
+    viewer.innerHTML = `<pre style="white-space:pre-wrap;font-size:12px;font-family:'Courier New',monospace;color:#cbd5e1;background:#0d1120;padding:16px;border-radius:8px;overflow-x:auto;">${escHtml(md)}</pre>`;
+  } catch(e) {
+    viewer.innerHTML = '<div class="text-xs" style="color:#f87171;">Could not load report.</div>';
+  }
+  viewer.scrollIntoView({behavior:'smooth'});
+}
+
+// ---------------------------------------------------------------------------
+// History charts
+// ---------------------------------------------------------------------------
+async function loadHistory() {
+  try {
+    const res = await fetch('/api/history?days=60');
+    const data = await res.json();
+    renderHistoryCharts(data);
+  } catch(e) {}
+}
+
+function verdictToScore(v) {
+  return { BULLISH: 1, MIXED: 0, VOLATILE: -0.5, BEARISH: -1 }[v] || 0;
+}
+
+function verdictColor(v) {
+  return { BULLISH: 'rgba(74,222,128,0.8)', BEARISH: 'rgba(248,113,113,0.8)', VOLATILE: 'rgba(251,191,36,0.8)', MIXED: 'rgba(148,163,184,0.5)' }[v] || 'rgba(148,163,184,0.5)';
+}
+
+function renderHistoryCharts(history) {
+  if (!history.length) return;
+  const labels = history.map(h => h.date_str);
+  const chartOpts = {
+    scales: {
+      x: { ticks: { color: '#4b5563', font: { size: 10 } }, grid: { color: '#1e2535' } },
+      y: { ticks: { color: '#4b5563', font: { size: 10 } }, grid: { color: '#1e2535' } },
+    },
+    plugins: { legend: { display: false } },
+    animation: false,
+  };
+
+  // Verdict chart (bar)
+  const vCtx = document.getElementById('verdict-chart').getContext('2d');
+  if (verdictChart) verdictChart.destroy();
+  verdictChart = new Chart(vCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Verdict',
+        data: history.map(h => verdictToScore(h.verdict)),
+        backgroundColor: history.map(h => verdictColor(h.verdict)),
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      ...chartOpts,
+      scales: {
+        ...chartOpts.scales,
+        y: { ...chartOpts.scales.y, min: -1.5, max: 1.5, ticks: { ...chartOpts.scales.y.ticks, callback: v => ({'1':'BULL','0':'MIXED','-0.5':'VOL','-1':'BEAR'}[v]||'') } }
+      }
+    }
+  });
+
+  // VIX chart (line)
+  const xCtx = document.getElementById('vix-chart').getContext('2d');
+  if (vixChart) vixChart.destroy();
+  vixChart = new Chart(xCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'VIX',
+        data: history.map(h => h.vix),
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245,158,11,0.08)',
+        borderWidth: 1.5,
+        pointRadius: 2,
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: chartOpts,
+  });
+
+  // S&P 500 change chart (bar)
+  const sCtx = document.getElementById('sp500-chart').getContext('2d');
+  if (sp500Chart) sp500Chart.destroy();
+  sp500Chart = new Chart(sCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'S&P 500 Change %',
+        data: history.map(h => h.sp500_change),
+        backgroundColor: history.map(h => (h.sp500_change || 0) >= 0 ? 'rgba(74,222,128,0.6)' : 'rgba(248,113,113,0.6)'),
+        borderRadius: 2,
+      }]
+    },
+    options: chartOpts,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Loading state
+// ---------------------------------------------------------------------------
+function showLoading(msg) {
+  const overlay = document.getElementById('loading-overlay');
+  const dash = document.getElementById('page-dashboard');
+  overlay.style.display = '';
+  overlay.querySelector('div').textContent = msg || 'Loading…';
+  dash.style.display = 'none';
+}
+
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
+  document.getElementById('page-dashboard').style.display = 'block';
+}
+
+function updateLastUpdated(ts) {
+  const el = document.getElementById('last-updated');
+  if (!ts) return;
+  try {
+    const d = new Date(ts);
+    el.textContent = 'Updated ' + d.toLocaleTimeString('en-US', {timeZone:'America/Chicago', hour:'2-digit', minute:'2-digit', timeZoneName:'short'});
+  } catch(e) { el.textContent = ts; }
+}
+
+// ---------------------------------------------------------------------------
+// Utils
+// ---------------------------------------------------------------------------
+function escHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

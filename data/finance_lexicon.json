@@ -1,0 +1,137 @@
+{
+  "bullish": {
+    "strong": {
+      "weight": 0.8,
+      "phrases": [
+        "beats estimates", "beat estimates", "beats expectations", "beat expectations",
+        "tops forecast", "exceeds expectations", "above consensus", "better than expected",
+        "raises guidance", "raised guidance", "raises outlook", "raised outlook",
+        "upward revision", "upside revision", "record revenue", "record earnings",
+        "record profit", "all-time high", "blowout quarter", "blowout earnings",
+        "acquisition", "acquires", "merger agreement", "takeover bid", "buyout",
+        "buyback", "share repurchase", "dividend increase", "special dividend",
+        "fda approval", "regulatory approval", "approved by fda", "green light",
+        "rate cut", "rate cuts", "emergency cut", "quantitative easing",
+        "upgraded to buy", "upgraded to outperform", "upgraded to overweight",
+        "price target raised", "pt raised", "buy rating", "strong buy",
+        "outperform", "overweight", "top pick", "beats eps", "earnings beat",
+        "revenue beat", "esg beat", "profit beat", "positive surprise",
+        "strategic deal", "landmark deal", "blockbuster deal", "multi-billion deal",
+        "stock buyback", "authorized buyback", "ipo prices above",
+        "debt-free", "investment grade upgrade", "credit upgrade",
+        "new contract", "wins contract", "awarded contract", "landmark contract"
+      ]
+    },
+    "moderate": {
+      "weight": 0.4,
+      "phrases": [
+        "positive outlook", "positive guidance", "growth", "expansion", "recovery",
+        "rebound", "gains", "partnership", "strategic alliance", "agreement",
+        "in-line results", "meets expectations", "strong demand", "improving margins",
+        "cost savings", "efficiency gains", "market share gains", "new product launch",
+        "increasing market share", "operating leverage", "positive free cash flow",
+        "debt reduction", "deleveraging", "credit facility", "revolving credit",
+        "soft landing", "cooling inflation", "easing financial conditions",
+        "strong hiring", "new customers", "recurring revenue", "subscription growth",
+        "margin expansion", "gross margin improvement", "ebitda growth"
+      ]
+    },
+    "weak": {
+      "weight": 0.2,
+      "phrases": [
+        "stable", "steady", "maintained", "holds guidance", "resilient",
+        "in-line", "as expected", "on track", "reiterated", "affirmed guidance"
+      ]
+    }
+  },
+  "bearish": {
+    "strong": {
+      "weight": -0.8,
+      "phrases": [
+        "misses estimates", "missed estimates", "misses expectations", "missed expectations",
+        "below expectations", "falls short", "below consensus", "worse than expected",
+        "cuts guidance", "cut guidance", "lowers guidance", "lowered guidance",
+        "downward revision", "profit warning", "earnings warning", "revenue warning",
+        "warns of", "issues warning", "negative preannouncement",
+        "layoffs", "job cuts", "massive layoffs", "workforce reduction", "downsizing",
+        "restructuring charge", "impairment charge", "goodwill writedown",
+        "bankruptcy", "chapter 11", "chapter 7", "defaults on", "insolvency",
+        "files for bankruptcy", "seeks bankruptcy protection",
+        "sec investigation", "sec probe", "doj investigation", "grand jury",
+        "fraud", "accounting irregularities", "restatement", "audit failure",
+        "product recall", "safety recall", "safety defect", "safety issue",
+        "tariff", "tariffs", "trade war", "export ban", "sanctions", "blacklisted",
+        "rate hike", "rate hikes", "hawkish surprise", "quantitative tightening",
+        "downgraded to sell", "downgraded to underperform", "downgraded to underweight",
+        "price target cut", "pt cut", "sell rating", "underperform", "underweight",
+        "avoid", "misses eps", "earnings miss", "revenue miss", "profit miss",
+        "cyberattack", "data breach", "ransomware", "hacked",
+        "recall", "fda rejection", "fda rejection letter", "complete response letter",
+        "plant shutdown", "production halt", "supply chain disruption",
+        "debt downgrade", "credit downgrade", "junk status", "distressed debt",
+        "ipo pulls", "ipo withdrawn", "delayed ipo"
+      ]
+    },
+    "moderate": {
+      "weight": -0.4,
+      "phrases": [
+        "slowdown", "weakness", "declining", "disappoints", "disappointing results",
+        "uncertainty", "headwinds", "dispute", "tensions", "trade tensions",
+        "concerns", "fears", "worry", "worried", "soft quarter",
+        "below consensus", "soft guidance", "cautious outlook", "conservative guidance",
+        "margin pressure", "cost inflation", "supply chain issues", "inventory buildup",
+        "lower volumes", "demand weakness", "pricing pressure", "competitive pressure",
+        "customer churn", "contract loss", "lost contract", "cancelled order",
+        "delayed project", "project cancellation", "budget cuts",
+        "interest expense", "higher costs", "cost overruns",
+        "geopolitical uncertainty", "macro uncertainty", "recessionary pressure"
+      ]
+    },
+    "weak": {
+      "weight": -0.2,
+      "phrases": [
+        "volatile", "mixed results", "challenging environment", "difficult conditions",
+        "headwinds", "cautious", "monitoring", "watching closely"
+      ]
+    }
+  },
+  "impact_keywords": {
+    "high": [
+      "fed", "federal reserve", "fomc", "rate decision", "inflation", "cpi", "gdp",
+      "nfp", "jobs report", "unemployment", "bankruptcy", "acquisition", "merger",
+      "earnings miss", "earnings beat", "guidance cut", "profit warning",
+      "tariff", "sanctions", "war", "default", "ipo"
+    ],
+    "medium": [
+      "upgrade", "downgrade", "deal", "partnership", "contract", "approval",
+      "layoffs", "restructuring", "analyst", "guidance", "buyback", "dividend"
+    ],
+    "low": [
+      "conference", "presentation", "commentary", "outlook", "survey", "report"
+    ]
+  },
+  "category_keywords": {
+    "macro": [
+      "fed", "federal reserve", "fomc", "interest rate", "inflation", "cpi", "ppi",
+      "gdp", "economic", "recession", "jobs", "nfp", "unemployment", "treasury",
+      "yield", "monetary policy", "fiscal policy", "stimulus", "debt ceiling",
+      "budget", "deficit", "vix", "market", "wall street", "economy"
+    ],
+    "political": [
+      "congress", "senate", "house", "president", "white house", "executive order",
+      "tariff", "trade", "regulation", "sec", "ftc", "doj", "antitrust",
+      "geopolitical", "war", "sanctions", "election", "legislation", "law",
+      "policy", "government", "federal", "washington", "biden", "trump", "fed chair"
+    ],
+    "deals": [
+      "acquisition", "acquires", "merger", "takeover", "buyout", "ipo",
+      "spac", "spin-off", "divestiture", "strategic deal", "joint venture",
+      "partnership", "alliance", "agreement", "contract", "bid"
+    ],
+    "earnings": [
+      "earnings", "quarterly results", "q1", "q2", "q3", "q4", "eps",
+      "revenue", "guidance", "outlook", "beat", "miss", "profit", "loss",
+      "ebitda", "operating income", "net income"
+    ]
+  }
+}
