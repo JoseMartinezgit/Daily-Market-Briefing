@@ -352,3 +352,139 @@ def fetch_earnings_reactions(tickers: list[str]) -> list[dict]:
             logger.debug("Earnings reaction %s: %s", ticker_sym, exc)
 
     return reactions
+
+
+def _to_float_or_none(v) -> Optional[float]:
+    if v is None:
+        return None
+    try:
+        f = float(v)
+        return None if f != f else f  # NaN check
+    except (TypeError, ValueError):
+        return None
+
+
+def _reaction_from_history(hist: Optional[pd.DataFrame], earnings_date, time_of_day: str) -> Optional[float]:
+    """
+    % change from prior close to open on the day the earnings reaction is priced in:
+    - BMO (before market open): reaction day = earnings_date itself
+    - AMC / TBD: reaction day = next trading day after earnings_date
+    """
+    if hist is None or hist.empty:
+        return None
+    reaction_date = earnings_date if time_of_day == "BMO" else earnings_date + datetime.timedelta(days=1)
+    try:
+        dates = [d.date() for d in hist.index]
+        reaction_idx = next((i for i, d in enumerate(dates) if d >= reaction_date), None)
+        if reaction_idx is None or reaction_idx == 0:
+            return None
+        prev_close = float(hist["Close"].iloc[reaction_idx - 1])
+        day_open = float(hist["Open"].iloc[reaction_idx])
+        if not prev_close:
+            return None
+        return round(_pct_change(day_open, prev_close), 2)
+    except Exception:
+        return None
+
+
+def fetch_earnings_calendar(tickers: list[str], lookback_count: int = 7) -> list[dict]:
+    """
+    For each ticker, find the next upcoming earnings date plus the price
+    reaction (% change, open vs prior close, on the day the move gets priced
+    in) for the last `lookback_count` historical earnings reports.
+
+    Returns list of:
+    {ticker, name, next_date, next_time, history: [...], avg_reaction_pct, beat_rate}
+    sorted by soonest upcoming earnings date.
+    """
+    results: list[dict] = []
+    today = datetime.datetime.utcnow().date()
+
+    for ticker_sym in tickers[:15]:
+        try:
+            tk = yf.Ticker(ticker_sym)
+            edates = tk.get_earnings_dates(limit=12)
+            if edates is None or edates.empty:
+                continue
+
+            upcoming: Optional[dict] = None
+            historical_rows = []
+            for idx, row in edates.iterrows():
+                date_val = idx.date() if hasattr(idx, "date") else None
+                if date_val is None:
+                    continue
+                hour = getattr(idx, "hour", None)
+                if hour is None or hour == 0:
+                    time_of_day = "TBD"
+                elif hour < 12:
+                    time_of_day = "BMO"
+                else:
+                    time_of_day = "AMC"
+
+                if date_val >= today:
+                    if upcoming is None or date_val < upcoming["date"]:
+                        upcoming = {"date": date_val, "time": time_of_day}
+                else:
+                    historical_rows.append((date_val, time_of_day, row))
+
+            if upcoming is None:
+                continue  # no known future earnings date — skip
+
+            historical_rows.sort(key=lambda x: x[0], reverse=True)
+            historical_rows = historical_rows[:lookback_count]
+
+            # Single price-history fetch covering all historical dates (avoids
+            # one yfinance call per date — fetch once, look up each reaction).
+            price_hist = None
+            if historical_rows:
+                earliest = min(d for d, _, _ in historical_rows)
+                try:
+                    price_hist = tk.history(
+                        start=earliest - datetime.timedelta(days=5),
+                        end=today + datetime.timedelta(days=1),
+                    )
+                except Exception:
+                    price_hist = None
+
+            hist_results = []
+            beats = beat_total = 0
+            for date_val, time_of_day, row in historical_rows:
+                eps_actual = _to_float_or_none(row.get("Reported EPS") if hasattr(row, "get") else None)
+                eps_estimate = _to_float_or_none(row.get("EPS Estimate") if hasattr(row, "get") else None)
+                beat = None
+                if eps_actual is not None and eps_estimate is not None:
+                    beat = eps_actual > eps_estimate
+                    beat_total += 1
+                    if beat:
+                        beats += 1
+
+                reaction_pct = _reaction_from_history(price_hist, date_val, time_of_day)
+                hist_results.append({
+                    "date": str(date_val),
+                    "time": time_of_day,
+                    "beat": beat,
+                    "reaction_pct": reaction_pct,
+                })
+
+            valid_reactions = [h["reaction_pct"] for h in hist_results if h["reaction_pct"] is not None]
+            avg_reaction = round(sum(valid_reactions) / len(valid_reactions), 2) if valid_reactions else None
+
+            try:
+                name = tk.info.get("shortName", ticker_sym)
+            except Exception:
+                name = ticker_sym
+
+            results.append({
+                "ticker": ticker_sym,
+                "name": name,
+                "next_date": str(upcoming["date"]),
+                "next_time": upcoming["time"],
+                "history": hist_results,
+                "avg_reaction_pct": avg_reaction,
+                "beat_rate": f"{beats}/{beat_total}" if beat_total else None,
+            })
+        except Exception as exc:
+            logger.debug("Earnings calendar %s: %s", ticker_sym, exc)
+
+    results.sort(key=lambda r: r["next_date"])
+    return results

@@ -83,7 +83,6 @@ tailwind.config = {
       <span class="font-bold text-sm tracking-widest text-blue-400" style="letter-spacing:0.15em;">MARKET BRIEFING</span>
       <div class="flex">
         <div class="nav-tab active" onclick="switchPage('dashboard',this)">Dashboard</div>
-        <div class="nav-tab" onclick="switchPage('reports',this)">Reports</div>
         <div class="nav-tab" onclick="switchPage('history',this)">History</div>
       </div>
     </div>
@@ -195,18 +194,20 @@ tailwind.config = {
     <!-- SOURCES STATUS -->
     <div id="sources-bar" class="mt-3 flex flex-wrap gap-2"></div>
 
-  </div><!-- end dashboard page -->
+    <!-- UPCOMING EARNINGS CALENDAR -->
+    <div class="panel p-4 mt-4">
+      <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">UPCOMING EARNINGS</div>
+      <div id="earnings-calendar-container"></div>
+    </div>
 
-  <!-- ====================================================================== -->
-  <!-- REPORTS PAGE -->
-  <!-- ====================================================================== -->
-  <div id="page-reports" class="page">
-    <div class="panel p-4">
+    <!-- SAVED REPORTS -->
+    <div class="panel p-4 mt-4">
       <div class="text-xs font-semibold mb-4" style="color:#60a5fa;letter-spacing:0.1em;">SAVED REPORTS</div>
       <div id="reports-list" class="mb-4"></div>
       <div id="report-viewer" class="prose prose-invert max-w-none" style="display:none;"></div>
     </div>
-  </div>
+
+  </div><!-- end dashboard page -->
 
   <!-- ====================================================================== -->
   <!-- HISTORY PAGE -->
@@ -271,7 +272,6 @@ function switchPage(name, el) {
   document.getElementById('page-' + name).classList.add('active');
   el.classList.add('active');
   if (name === 'history') loadHistory();
-  if (name === 'reports') loadReports();
 }
 
 // ---------------------------------------------------------------------------
@@ -341,6 +341,7 @@ function renderAll(data) {
   renderEvents(data.events || []);
   renderWatchlist(data.watchlist || []);
   renderEarningsReactions(data.earnings_reactions || []);
+  renderEarningsCalendar(data.earnings_calendar || []);
   renderRisks(data.verdict, data.events || [], data.news || []);
   renderSourcesBar(data.sources_status || {}, data.failed_sources || []);
   updateLastUpdated(data.last_updated);
@@ -403,10 +404,10 @@ function renderSnapshot(snap) {
     const cls = chg > 0 ? 'up' : chg < 0 ? 'down' : 'neutral-val';
     const arrow = chg > 0 ? '▲' : chg < 0 ? '▼' : '—';
     return `<div class="snapshot-card">
-      <div class="text-xs font-mono font-bold mb-1" style="color:#94a3b8;">${s.symbol}</div>
+      <div class="text-xs font-bold mb-1 truncate" style="color:#94a3b8;">${s.name}</div>
       <div class="text-base font-bold mb-0.5">${fmtPrice(s.price)}</div>
       <div class="text-xs font-semibold ${cls}">${arrow} ${fmtPct(chg)}</div>
-      <div class="text-xs mt-0.5 truncate" style="color:#4b5563;">${s.name}</div>
+      <div class="text-xs mt-0.5 font-mono" style="color:#4b5563;">${s.symbol}</div>
     </div>`;
   }).join('');
 }
@@ -569,6 +570,42 @@ function renderEarningsReactions(reactions) {
     return `<div class="flex items-center justify-between py-1.5" style="border-bottom:1px solid #1e2535;font-size:12px;">
       <div><span class="font-mono font-bold">${r.ticker}</span> <span style="color:#6b7280;">${r.date}</span></div>
       <div class="flex gap-3 items-center">${surprise} ${rxn ? `<span style="color:#4b5563;">→</span> ${rxn}` : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Upcoming Earnings Calendar
+// ---------------------------------------------------------------------------
+function renderEarningsCalendar(calendar) {
+  const el = document.getElementById('earnings-calendar-container');
+  if (!el) return;
+  if (!calendar || !calendar.length) {
+    el.innerHTML = '<div class="text-xs" style="color:#4b5563;">No upcoming earnings dates found for the watchlist.</div>';
+    return;
+  }
+  el.innerHTML = calendar.map(e => {
+    const avg = e.avg_reaction_pct != null
+      ? `<span class="${e.avg_reaction_pct >= 0 ? 'up' : 'down'} font-semibold">${e.avg_reaction_pct >= 0 ? '▲' : '▼'} ${Math.abs(e.avg_reaction_pct).toFixed(2)}%</span>`
+      : '<span style="color:#4b5563;">N/A</span>';
+    const beatRate = e.beat_rate ? `<span style="color:#94a3b8;">${e.beat_rate} beats</span>` : '';
+    const historyChips = (e.history || []).map(h => {
+      if (h.reaction_pct == null) return `<span class="ticker-chip" title="${h.date}">—</span>`;
+      const cls = h.reaction_pct >= 0 ? 'up' : 'down';
+      const arrow = h.reaction_pct >= 0 ? '▲' : '▼';
+      return `<span class="ticker-chip ${cls}" title="${h.date} (${h.time})">${arrow}${Math.abs(h.reaction_pct).toFixed(1)}%</span>`;
+    }).join(' ');
+    return `<div class="flex items-center justify-between py-2 flex-wrap gap-2" style="border-bottom:1px solid #1e2535;">
+      <div style="min-width:160px;">
+        <div class="font-mono font-bold text-sm">${e.ticker}</div>
+        <div class="text-xs truncate" style="color:#8892a4;max-width:160px;">${e.name}</div>
+      </div>
+      <div class="text-xs" style="color:#60a5fa;min-width:110px;">${e.next_date}<br><span style="color:#4b5563;">${e.next_time}</span></div>
+      <div class="flex flex-col items-start gap-1" style="min-width:100px;">
+        ${avg}
+        <span class="text-xs">${beatRate}</span>
+      </div>
+      <div class="flex gap-1 flex-wrap" style="max-width:280px;">${historyChips}</div>
     </div>`;
   }).join('');
 }

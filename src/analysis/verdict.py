@@ -1,5 +1,7 @@
 """
-Day verdict computation: BULLISH / BEARISH / VOLATILE / MIXED.
+Day verdict computation: always BULLISH or BEARISH (VOLATILE overrides when
+VIX is elevated and the market move is large). Confidence (50-100%) expresses
+how strong the lean is — there is no neutral/MIXED state.
 
 Combines:
 - Major index % changes (S&P, Nasdaq, Dow, Russell)
@@ -227,21 +229,20 @@ def compute_verdict(
     sp500_abs = abs(index_changes.get("sp500", 0))
     is_volatile = vix_val >= 25 and sp500_abs >= 1.5
 
-    # --- Determine verdict ---
+    # --- Determine verdict: always a directional lean, no in-between state ---
     if is_volatile:
         verdict = "VOLATILE"
-    elif combined >= 0.25:
+    elif combined >= 0:
         verdict = "BULLISH"
-    elif combined <= -0.25:
-        verdict = "BEARISH"
     else:
-        verdict = "MIXED"
+        verdict = "BEARISH"
 
-    # --- Confidence: distance from thresholds, scaled to 50-100 ---
+    # --- Confidence: distance from neutral (0), scaled to 50-100 ---
+    # Near 0 combined score = near 50% (toss-up lean); near ±1 = near 100% (strong lean)
     if verdict == "VOLATILE":
         confidence = min(100, 60 + int(vix_val - 25) * 2)
     else:
-        confidence = min(100, 55 + int(abs(combined) * 50))
+        confidence = min(100, 50 + int(abs(combined) * 50))
 
     # Pre-market check: if before 9:30 AM ET (8:30 CT), note futures
     now_ct_hour = datetime.datetime.now().hour

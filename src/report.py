@@ -70,6 +70,7 @@ def generate_report(
     watchlist = dashboard_data.get("watchlist", [])
     sector_heatmap = dashboard_data.get("sector_heatmap", [])
     earnings_reactions = dashboard_data.get("earnings_reactions", [])
+    earnings_calendar = dashboard_data.get("earnings_calendar", [])
     sources_status = dashboard_data.get("sources_status", {})
 
     # -----------------------------------------------------------------------
@@ -173,6 +174,35 @@ def generate_report(
                 f"{eps_actual} | {eps_est} | {surprise} | {reaction_arrow} {reaction} |"
             )
         lines.append("")
+
+    # -----------------------------------------------------------------------
+    # Upcoming Earnings Calendar
+    # -----------------------------------------------------------------------
+    if earnings_calendar:
+        lines += ["## Upcoming Earnings", ""]
+        lines.append("| Ticker | Company | Next Report | Avg Reaction (last 7) | Beat Rate |")
+        lines.append("|--------|---------|--------------|------------------------|-----------|")
+        for e in earnings_calendar:
+            avg = _fmt_pct(e.get("avg_reaction_pct")) if e.get("avg_reaction_pct") is not None else "N/A"
+            beat_rate = e.get("beat_rate") or "N/A"
+            lines.append(
+                f"| **{e.get('ticker', '')}** | {e.get('name', '')} | "
+                f"{e.get('next_date', '')} ({e.get('next_time', 'TBD')}) | {avg} | {beat_rate} |"
+            )
+        lines.append("")
+
+        for e in earnings_calendar:
+            history = e.get("history", [])
+            if not history:
+                continue
+            lines.append(f"**{e.get('ticker', '')} — last {len(history)} reports:**")
+            lines.append("")
+            for h in history:
+                arrow = _dir_arrow(h.get("reaction_pct"))
+                reaction = _fmt_pct(h.get("reaction_pct")) if h.get("reaction_pct") is not None else "N/A"
+                beat_label = "beat" if h.get("beat") is True else ("missed" if h.get("beat") is False else "N/A")
+                lines.append(f"- {h.get('date', '')} ({h.get('time', 'TBD')}) — {beat_label} estimate — {arrow} {reaction} next session")
+            lines.append("")
 
     # -----------------------------------------------------------------------
     # Top 5 Stories

@@ -79,7 +79,7 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
     from src.aggregators.market_data import (
         fetch_market_snapshot, fetch_vix_data,
         fetch_sector_heatmap, fetch_watchlist_prices,
-        fetch_earnings_reactions,
+        fetch_earnings_reactions, fetch_earnings_calendar,
     )
     from src.aggregators.events import get_all_events
     from src.analysis.sentiment import score_articles_batch, check_keyword_alerts
@@ -150,15 +150,16 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
     # ------------------------------------------------------------------
     # 4. Watchlist prices
     # ------------------------------------------------------------------
-    all_watchlist_tickers = list(cfg.watchlist)
-    # Add tickers from news
-    for art in processed_news:
-        for t in art.get("tickers", []):
-            sym = t.get("ticker", "")
-            if sym and sym not in all_watchlist_tickers:
-                all_watchlist_tickers.append(sym)
+    # Two-pass: first determine which tickers will actually make the top-10
+    # watchlist (ranked by mention count), THEN fetch prices only for those —
+    # avoids truncating by news-scan order before ranking is known.
+    provisional_watchlist = build_watchlist(processed_news, cfg.watchlist, {})
+    candidate_tickers = list(cfg.watchlist)
+    for w in provisional_watchlist:
+        if w["ticker"] not in candidate_tickers:
+            candidate_tickers.append(w["ticker"])
 
-    watchlist_prices = fetch_watchlist_prices(all_watchlist_tickers[:20])
+    watchlist_prices = fetch_watchlist_prices(candidate_tickers)
     watchlist = build_watchlist(processed_news, cfg.watchlist, watchlist_prices)
 
     # ------------------------------------------------------------------
@@ -180,6 +181,12 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
         earnings_reactions = fetch_earnings_reactions(cfg.earnings_watchlist[:15])
     except Exception as exc:
         logger.warning("Earnings reactions failed: %s", exc)
+
+    earnings_calendar = []
+    try:
+        earnings_calendar = fetch_earnings_calendar(cfg.earnings_watchlist)
+    except Exception as exc:
+        logger.warning("Earnings calendar failed: %s", exc)
 
     # ------------------------------------------------------------------
     # 8. Persist to DB
@@ -209,6 +216,7 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
         "events": events,
         "watchlist": watchlist,
         "earnings_reactions": earnings_reactions,
+        "earnings_calendar": earnings_calendar,
         "sources_status": sources_status,
         "failed_sources": list(set(failed_sources)),
         "last_updated": datetime.datetime.now().isoformat(),
