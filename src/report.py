@@ -69,6 +69,7 @@ def generate_report(
     events = dashboard_data.get("events", [])
     watchlist = dashboard_data.get("watchlist", [])
     sector_heatmap = dashboard_data.get("sector_heatmap", [])
+    earnings_reactions = dashboard_data.get("earnings_reactions", [])
     sources_status = dashboard_data.get("sources_status", {})
 
     # -----------------------------------------------------------------------
@@ -151,6 +152,25 @@ def generate_report(
                 f"{_fmt_price(w.get('price'))} | "
                 f"{arrow} {_fmt_pct(w.get('change_pct'))} | "
                 f"{w.get('mentions', 0)} | {label} |"
+            )
+        lines.append("")
+
+    # -----------------------------------------------------------------------
+    # Earnings Reactions (last 7 days)
+    # -----------------------------------------------------------------------
+    if earnings_reactions:
+        lines += ["## Earnings Reactions (Last 7 Days)", ""]
+        lines.append("| Ticker | Company | Date | EPS Actual | EPS Est. | Surprise | Price Reaction |")
+        lines.append("|--------|---------|------|------------|----------|----------|-----------------|")
+        for r in earnings_reactions:
+            eps_actual = f"{r['eps_actual']:.2f}" if r.get("eps_actual") is not None else "N/A"
+            eps_est = f"{r['eps_estimate']:.2f}" if r.get("eps_estimate") is not None else "N/A"
+            surprise = _fmt_pct(r.get("surprise_pct")) if r.get("surprise_pct") is not None else "N/A"
+            reaction_arrow = _dir_arrow(r.get("price_reaction"))
+            reaction = _fmt_pct(r.get("price_reaction")) if r.get("price_reaction") is not None else "N/A"
+            lines.append(
+                f"| **{r.get('ticker', '')}** | {r.get('name', '')} | {r.get('date', '')} | "
+                f"{eps_actual} | {eps_est} | {surprise} | {reaction_arrow} {reaction} |"
             )
         lines.append("")
 

@@ -432,9 +432,9 @@ function renderHeatmap(sectors) {
     const cls = s.change_pct > 0 ? 'up' : s.change_pct < 0 ? 'down' : 'neutral-val';
     const bg = heatmapColor(s.change_pct);
     return `<div class="heatmap-cell" style="background:${bg};">
-      <div class="font-bold font-mono text-xs">${s.etf}</div>
+      <div class="font-bold text-xs" style="text-align:center;">${s.name}</div>
       <div class="text-xs mt-0.5 ${cls} font-semibold">${fmtPct(s.change_pct)}</div>
-      <div style="font-size:9px;color:#6b7280;margin-top:2px;">${s.name}</div>
+      <div style="font-size:9px;color:#6b7280;margin-top:2px;font-family:monospace;">${s.etf}</div>
     </div>`;
   }).join('');
 }
