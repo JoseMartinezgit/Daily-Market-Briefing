@@ -664,6 +664,59 @@ def _next_n_trading_days(n: int = 3, start: Optional[datetime.date] = None) -> l
     return days
 
 
+def _enrich_earnings_candidate(
+    ticker_sym: str, tk: "yf.Ticker", next_time: str, historical_rows: list,
+    is_nasdaq100: bool, nasdaq100_map: dict, lookback_count: int, today: datetime.date,
+) -> dict:
+    """Builds the full display entry (history, beat rate, analyst data) for one candidate."""
+    from src.analysis.ticker_mapping import TICKER_NAMES
+
+    if is_nasdaq100:
+        market_cap = nasdaq100_map[ticker_sym].get("market_cap")
+        name = nasdaq100_map[ticker_sym]["name"]
+    else:
+        try:
+            market_cap = tk.fast_info.get("marketCap")
+        except Exception:
+            market_cap = None
+        name = TICKER_NAMES.get(ticker_sym, ticker_sym)
+
+    historical_rows = sorted(historical_rows, key=lambda x: x[0], reverse=True)[:lookback_count]
+
+    price_hist = None
+    if historical_rows:
+        earliest = min(d for d, _, _ in historical_rows)
+        try:
+            price_hist = tk.history(start=earliest - datetime.timedelta(days=5), end=today + datetime.timedelta(days=1))
+        except Exception:
+            price_hist = None
+
+    hist_results = []
+    beats = beat_total = 0
+    for date_val, time_of_day, row in historical_rows:
+        eps_actual = _to_float_or_none(row.get("Reported EPS") if hasattr(row, "get") else None)
+        eps_estimate = _to_float_or_none(row.get("EPS Estimate") if hasattr(row, "get") else None)
+        beat = None
+        if eps_actual is not None and eps_estimate is not None:
+            beat = eps_actual > eps_estimate
+            beat_total += 1
+            if beat:
+                beats += 1
+        reaction_pct = _reaction_from_history(price_hist, date_val, time_of_day)
+        hist_results.append({"date": str(date_val), "time": time_of_day, "beat": beat, "reaction_pct": reaction_pct})
+
+    return {
+        "ticker": ticker_sym,
+        "name": name,
+        "is_nasdaq100": is_nasdaq100,
+        "market_cap": market_cap,
+        "next_time": next_time,
+        "beat_rate": f"{beats}/{beat_total}" if beat_total else None,
+        "history": hist_results,
+        **_fetch_analyst_consensus(tk),
+    }
+
+
 def fetch_upcoming_earnings_board(earnings_watchlist: list[str], lookback_count: int = 4, num_days: int = 3) -> list[dict]:
     """
     Day-by-day board of upcoming earnings for the next `num_days` trading
@@ -676,6 +729,10 @@ def fetch_upcoming_earnings_board(earnings_watchlist: list[str], lookback_count:
       biggest one by market cap.
     - Else: that day's "companies" list is empty (UI shows "None").
 
+    If ALL `num_days` are empty, a final entry (marked is_fallback=True) shows
+    the single soonest upcoming reporter beyond the window, so the board isn't
+    just a wall of "None".
+
     Each selected company includes: historical EPS beat rate and next-session
     price reaction for its last `lookback_count` reports, analyst price
     targets, and consensus rating (BUY/HOLD/SELL) — NOT a forecast, just
@@ -684,8 +741,6 @@ def fetch_upcoming_earnings_board(earnings_watchlist: list[str], lookback_count:
     This scans the full ~100+ ticker universe for earnings dates (slow,
     ~60-90s) — callers should cache the result for several hours.
     """
-    from src.analysis.ticker_mapping import TICKER_NAMES
-
     nasdaq100 = _load_nasdaq100_constituents()
     nasdaq100_map = {c["ticker"]: c for c in nasdaq100}
     universe_tickers = list(nasdaq100_map.keys())
@@ -695,9 +750,11 @@ def fetch_upcoming_earnings_board(earnings_watchlist: list[str], lookback_count:
 
     target_dates = _next_n_trading_days(num_days)
     target_date_strs = {str(d) for d in target_dates}
+    last_target_date = target_dates[-1]
     today = datetime.datetime.now().date()
 
     by_date: dict[str, list[dict]] = {str(d): [] for d in target_dates}
+    beyond_window: list[tuple] = []  # (next_date, ticker_sym, tk, next_time, historical_rows, is_nasdaq100)
 
     for ticker_sym in universe_tickers:
         try:
@@ -726,63 +783,19 @@ def fetch_upcoming_earnings_board(earnings_watchlist: list[str], lookback_count:
                 else:
                     historical_rows.append((date_val, time_of_day, row))
 
-            if next_date is None or str(next_date) not in target_date_strs:
-                continue  # doesn't report within our target window — skip the expensive work below
+            if next_date is None:
+                continue
 
-            # Market cap: from cached Nasdaq-100 data, else a lightweight live lookup
             is_nasdaq100 = ticker_sym in nasdaq100_map
-            if is_nasdaq100:
-                market_cap = nasdaq100_map[ticker_sym].get("market_cap")
-                name = nasdaq100_map[ticker_sym]["name"]
-            else:
-                try:
-                    market_cap = tk.fast_info.get("marketCap")
-                except Exception:
-                    market_cap = None
-                name = TICKER_NAMES.get(ticker_sym, ticker_sym)
 
-            historical_rows.sort(key=lambda x: x[0], reverse=True)
-            historical_rows = historical_rows[:lookback_count]
-
-            price_hist = None
-            if historical_rows:
-                earliest = min(d for d, _, _ in historical_rows)
-                try:
-                    price_hist = tk.history(
-                        start=earliest - datetime.timedelta(days=5),
-                        end=today + datetime.timedelta(days=1),
-                    )
-                except Exception:
-                    price_hist = None
-
-            hist_results = []
-            beats = beat_total = 0
-            for date_val, time_of_day, row in historical_rows:
-                eps_actual = _to_float_or_none(row.get("Reported EPS") if hasattr(row, "get") else None)
-                eps_estimate = _to_float_or_none(row.get("EPS Estimate") if hasattr(row, "get") else None)
-                beat = None
-                if eps_actual is not None and eps_estimate is not None:
-                    beat = eps_actual > eps_estimate
-                    beat_total += 1
-                    if beat:
-                        beats += 1
-                reaction_pct = _reaction_from_history(price_hist, date_val, time_of_day)
-                hist_results.append({
-                    "date": str(date_val), "time": time_of_day,
-                    "beat": beat, "reaction_pct": reaction_pct,
-                })
-
-            entry = {
-                "ticker": ticker_sym,
-                "name": name,
-                "is_nasdaq100": is_nasdaq100,
-                "market_cap": market_cap,
-                "next_time": next_time,
-                "beat_rate": f"{beats}/{beat_total}" if beat_total else None,
-                "history": hist_results,
-                **_fetch_analyst_consensus(tk),
-            }
-            by_date[str(next_date)].append(entry)
+            if str(next_date) in target_date_strs:
+                entry = _enrich_earnings_candidate(
+                    ticker_sym, tk, next_time, historical_rows, is_nasdaq100,
+                    nasdaq100_map, lookback_count, today,
+                )
+                by_date[str(next_date)].append(entry)
+            elif next_date > last_target_date:
+                beyond_window.append((next_date, ticker_sym, tk, next_time, historical_rows, is_nasdaq100))
         except Exception as exc:
             logger.debug("Earnings board candidate %s failed: %s", ticker_sym, exc)
 
@@ -802,10 +815,24 @@ def fetch_upcoming_earnings_board(earnings_watchlist: list[str], lookback_count:
         else:
             selected = []
 
-        board.append({
-            "date": date_str,
-            "day_label": d.strftime("%A, %b %d"),
-            "companies": selected,
-        })
+        board.append({"date": date_str, "day_label": d.strftime("%A, %b %d"), "companies": selected})
+
+    all_empty = all(not day["companies"] for day in board)
+    if all_empty and beyond_window:
+        beyond_window.sort(key=lambda x: (x[0], not x[5]))  # soonest date, prefer Nasdaq-100 on ties
+        next_date, ticker_sym, tk, next_time, historical_rows, is_nasdaq100 = beyond_window[0]
+        try:
+            entry = _enrich_earnings_candidate(
+                ticker_sym, tk, next_time, historical_rows, is_nasdaq100,
+                nasdaq100_map, lookback_count, today,
+            )
+            board.append({
+                "date": str(next_date),
+                "day_label": f"Next upcoming report: {next_date.strftime('%A, %b %d')}",
+                "companies": [entry],
+                "is_fallback": True,
+            })
+        except Exception as exc:
+            logger.debug("Earnings board fallback candidate %s failed: %s", ticker_sym, exc)
 
     return board

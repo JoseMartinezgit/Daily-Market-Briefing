@@ -127,29 +127,29 @@ tailwind.config = {
     <div id="snapshot-row" class="grid gap-3 mb-4" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));">
     </div>
 
-    <!-- SECTOR HEATMAP / EARNINGS BOARD  ·  STOCKS OF THE DAY / TOMORROW'S PICKS -->
-    <div class="grid gap-4 mb-4" style="grid-template-columns:2fr 1fr;">
-      <div class="flex flex-col gap-4">
-        <div class="panel p-4">
-          <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">SECTOR HEATMAP</div>
-          <div id="heatmap-grid" class="grid gap-2" style="grid-template-columns:repeat(4,1fr);"></div>
-        </div>
-        <div class="panel p-4">
-          <div class="text-xs font-semibold mb-3" style="color:#f59e0b;letter-spacing:0.1em;">UPCOMING EARNINGS REPORTS</div>
-          <div id="earnings-board-container" style="max-height:340px;overflow-y:auto;"></div>
-        </div>
+    <!-- SECTOR HEATMAP (full width) -->
+    <div class="panel p-4 mb-4">
+      <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">SECTOR HEATMAP</div>
+      <div id="heatmap-grid" class="grid gap-2" style="grid-template-columns:repeat(4,1fr);"></div>
+    </div>
+
+    <!-- STOCKS OF THE DAY + TOMORROW'S TOP PICKS -->
+    <div class="grid gap-4 mb-4" style="grid-template-columns:1fr 1fr;">
+      <div class="panel p-4">
+        <div class="text-xs font-semibold mb-3" style="color:#4ade80;letter-spacing:0.1em;">🏆 STOCKS OF THE DAY</div>
+        <div id="top-movers-container"></div>
       </div>
-      <div class="flex flex-col gap-4">
-        <div class="panel p-4">
-          <div class="text-xs font-semibold mb-3" style="color:#4ade80;letter-spacing:0.1em;">🏆 STOCKS OF THE DAY</div>
-          <div id="top-movers-container"></div>
-        </div>
-        <div class="panel p-4">
-          <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">🔮 TOMORROW'S TOP PICKS</div>
-          <div class="text-xs mb-2" style="color:#4b5563;">Heuristic shortlist, not a prediction — based on today's news momentum and confirmed earnings catalysts.</div>
-          <div id="tomorrow-picks-container"></div>
-        </div>
+      <div class="panel p-4">
+        <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">🔮 TOMORROW'S TOP PICKS</div>
+        <div class="text-xs mb-2" style="color:#4b5563;">Heuristic shortlist, not a prediction — based on today's news momentum and confirmed earnings catalysts.</div>
+        <div id="tomorrow-picks-container"></div>
       </div>
+    </div>
+
+    <!-- UPCOMING EARNINGS REPORTS (full width) -->
+    <div class="panel p-4 mb-4">
+      <div class="text-xs font-semibold mb-3" style="color:#f59e0b;letter-spacing:0.1em;">UPCOMING EARNINGS REPORTS</div>
+      <div id="earnings-board-container"></div>
     </div>
 
     <!-- MAIN TWO-COLUMN LAYOUT -->
@@ -171,7 +171,7 @@ tailwind.config = {
         <div id="news-feed" class="overflow-y-auto" style="max-height:70vh;"></div>
       </div>
 
-      <!-- RIGHT: TIMELINE + WATCHLIST -->
+      <!-- RIGHT: TIMELINE + WATCHLIST + AI CHAT -->
       <div class="flex flex-col gap-4">
 
         <!-- EVENT TIMELINE -->
@@ -184,6 +184,23 @@ tailwind.config = {
         <div class="panel p-4">
           <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">TODAY'S WATCHLIST</div>
           <div id="watchlist-container"></div>
+        </div>
+
+        <!-- AI CHAT -->
+        <div class="panel p-4 flex flex-col" style="max-height:50vh;">
+          <div class="text-xs font-semibold mb-1" style="color:#60a5fa;letter-spacing:0.1em;">🤖 ASK THE DASHBOARD</div>
+          <div class="text-xs mb-2" style="color:#4b5563;">Runs entirely in your browser — no signup, no API key, nothing sent to any server.</div>
+          <div id="chat-messages" class="flex-1 overflow-y-auto mb-3" style="min-height:0;">
+            <div class="text-xs" style="color:#4b5563;">Ask me anything about today's verdict, news, sectors, watchlist, or earnings.</div>
+          </div>
+          <div id="chat-load-status" class="text-xs mb-2" style="color:#4b5563;display:none;"></div>
+          <div class="flex gap-2">
+            <input id="chat-input" type="text" placeholder="Ask about today's data…"
+                   class="flex-1 text-xs px-3 py-2 rounded-md" style="background:#0d1120;border:1px solid #2d3748;color:#e2e8f0;"
+                   onkeydown="if(event.key==='Enter') sendChatMessage()">
+            <button id="chat-send-btn" onclick="sendChatMessage()" class="text-xs font-semibold px-3 py-2 rounded-md"
+                    style="background:#1e2535;color:#94a3b8;border:1px solid #2d3748;">Ask</button>
+          </div>
         </div>
 
         <!-- EARNINGS REACTIONS -->
@@ -228,7 +245,8 @@ tailwind.config = {
 <!-- FOOTER -->
 <footer class="mt-8 py-4 text-center text-xs" style="color:#374151;border-top:1px solid #1e2535;">
   Daily Market Briefing &nbsp;·&nbsp; Informational only — not financial advice &nbsp;·&nbsp;
-  All data sourced from public APIs and RSS feeds
+  All data sourced from public APIs and RSS feeds<br>
+  Made by Jose Martinez &nbsp;·&nbsp; <a href="mailto:jose.a.m6238@gmail.com" style="color:#4b5563;text-decoration:underline;">jose.a.m6238@gmail.com</a>
 </footer>
 
 <!-- ========================================================================
@@ -639,54 +657,67 @@ function renderEarningsReactions(reactions) {
 // ---------------------------------------------------------------------------
 // Upcoming Earnings Reports (next 3 trading days)
 // ---------------------------------------------------------------------------
+function renderEarningsCompanyCard(c) {
+  const mcapStr = c.market_cap ? `$${(c.market_cap / 1e9).toFixed(0)}B mkt cap` : '';
+  const nasdaqBadge = c.is_nasdaq100 ? '<span class="badge badge-low" style="margin-left:6px;">NDX-100</span>' : '';
+  const consensusLine = c.analyst_target_mean != null
+    ? `${c.consensus || 'N/A'} · Target ${fmtPrice(c.analyst_target_mean)}${c.num_analysts ? ` (${c.num_analysts} analysts)` : ''}`
+    : 'No analyst data';
+  const beatLine = c.beat_rate ? `Beat estimates ${c.beat_rate} times in last ${c.history.length} reports` : 'No recent earnings history';
+  const historyLines = (c.history || []).map(h => {
+    const beatLabel = h.beat === true ? 'Beat' : h.beat === false ? 'Missed' : 'Reported';
+    if (h.reaction_pct == null) {
+      return `<div class="text-xs" style="color:#6b7280;">${h.date} (${h.time}): ${beatLabel} estimates — move unavailable</div>`;
+    }
+    const cls = h.reaction_pct >= 0 ? 'up' : 'down';
+    const arrow = h.reaction_pct >= 0 ? '▲' : '▼';
+    return `<div class="text-xs" style="color:#6b7280;">${h.date} (${h.time}): <span style="color:#94a3b8;">${beatLabel} estimates</span> → <span class="${cls} font-semibold">${arrow} ${Math.abs(h.reaction_pct).toFixed(2)}%</span> next session</div>`;
+  }).join('');
+  return `<div class="p-3" style="background:#11151f;border:1px solid #1e2535;border-radius:8px;">
+    <div class="flex items-center justify-between flex-wrap gap-1">
+      <div>
+        <span class="font-mono font-bold text-xs">${escHtml(c.ticker)}</span>
+        <span class="text-xs ml-1" style="color:#8892a4;">${escHtml(c.name)}</span>
+        ${nasdaqBadge}
+      </div>
+      <div class="text-xs" style="color:#6b7280;">${mcapStr}</div>
+    </div>
+    <div class="text-xs mt-1" style="color:#60a5fa;">${escHtml(consensusLine)}</div>
+    <div class="text-xs mt-0.5 font-semibold" style="color:#94a3b8;">${escHtml(beatLine)}</div>
+    <div class="mt-1 flex flex-col gap-0.5">${historyLines}</div>
+  </div>`;
+}
+
+function renderEarningsDayRow(day, labelColor) {
+  if (!day.companies || !day.companies.length) {
+    return `<div class="flex items-center gap-3 py-1.5" style="border-bottom:1px solid #1e2535;">
+      <span class="text-xs font-semibold" style="color:${labelColor};min-width:150px;">${escHtml(day.day_label)}</span>
+      <span class="text-xs" style="color:#4b5563;">None</span>
+    </div>`;
+  }
+  const cards = day.companies.map(renderEarningsCompanyCard).join('');
+  return `<div class="py-2" style="border-bottom:1px solid #1e2535;">
+    <div class="text-xs font-semibold mb-2" style="color:${labelColor};">${escHtml(day.day_label)}</div>
+    <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));">${cards}</div>
+  </div>`;
+}
+
 function renderEarningsBoard(board) {
   const el = document.getElementById('earnings-board-container');
   if (!board || !board.length) {
     el.innerHTML = '<div class="text-xs" style="color:#4b5563;">No earnings calendar data available.</div>';
     return;
   }
-  el.innerHTML = board.map(day => {
-    if (!day.companies || !day.companies.length) {
-      return `<div class="mb-3">
-        <div class="text-xs font-semibold mb-1" style="color:#94a3b8;">${escHtml(day.day_label)}</div>
-        <div class="text-xs" style="color:#4b5563;">None</div>
-      </div>`;
-    }
-    const cards = day.companies.map(c => {
-      const mcapStr = c.market_cap ? `$${(c.market_cap / 1e9).toFixed(0)}B mkt cap` : '';
-      const nasdaqBadge = c.is_nasdaq100 ? '<span class="badge badge-low" style="margin-left:6px;">NDX-100</span>' : '';
-      const consensusLine = c.analyst_target_mean != null
-        ? `${c.consensus || 'N/A'} · Target ${fmtPrice(c.analyst_target_mean)}${c.num_analysts ? ` (${c.num_analysts} analysts)` : ''}`
-        : 'No analyst data';
-      const beatLine = c.beat_rate ? `Beat estimates ${c.beat_rate} times in last ${c.history.length} reports` : 'No recent earnings history';
-      const historyLines = (c.history || []).map(h => {
-        const beatLabel = h.beat === true ? 'Beat' : h.beat === false ? 'Missed' : 'Reported';
-        const cls = h.reaction_pct >= 0 ? 'up' : 'down';
-        if (h.reaction_pct == null) {
-          return `<div class="text-xs" style="color:#6b7280;">${h.date} (${h.time}): ${beatLabel} estimates — move unavailable</div>`;
-        }
-        const arrow = h.reaction_pct >= 0 ? '▲' : '▼';
-        return `<div class="text-xs" style="color:#6b7280;">${h.date} (${h.time}): <span style="color:#94a3b8;">${beatLabel} estimates</span> → <span class="${cls} font-semibold">${arrow} ${Math.abs(h.reaction_pct).toFixed(2)}%</span> next session</div>`;
-      }).join('');
-      return `<div class="py-2" style="border-bottom:1px solid #1e2535;">
-        <div class="flex items-center justify-between flex-wrap gap-1">
-          <div>
-            <span class="font-mono font-bold text-xs">${escHtml(c.ticker)}</span>
-            <span class="text-xs ml-1" style="color:#8892a4;">${escHtml(c.name)}</span>
-            ${nasdaqBadge}
-          </div>
-          <div class="text-xs" style="color:#6b7280;">${mcapStr}</div>
-        </div>
-        <div class="text-xs mt-1" style="color:#60a5fa;">${escHtml(consensusLine)}</div>
-        <div class="text-xs mt-0.5 font-semibold" style="color:#94a3b8;">${escHtml(beatLine)}</div>
-        <div class="mt-1 flex flex-col gap-0.5">${historyLines}</div>
-      </div>`;
-    }).join('');
-    return `<div class="mb-3">
-      <div class="text-xs font-semibold mb-1" style="color:#94a3b8;">${escHtml(day.day_label)}</div>
-      ${cards}
-    </div>`;
-  }).join('');
+  const mainDays = board.filter(d => !d.is_fallback);
+  const fallbackDay = board.find(d => d.is_fallback);
+
+  let html = mainDays.map(day => renderEarningsDayRow(day, '#94a3b8')).join('');
+
+  if (fallbackDay && fallbackDay.companies && fallbackDay.companies.length) {
+    html += renderEarningsDayRow(fallbackDay, '#fbbf24');
+  }
+
+  el.innerHTML = html;
 }
 
 // ---------------------------------------------------------------------------
@@ -877,6 +908,134 @@ function escHtml(s) {
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
+}
+
+// ---------------------------------------------------------------------------
+// AI Chat
+// ---------------------------------------------------------------------------
+function appendChatMessage(role, text) {
+  const el = document.getElementById('chat-messages');
+  const isUser = role === 'user';
+  const bubble = document.createElement('div');
+  bubble.className = 'mb-2 text-xs';
+  bubble.innerHTML = isUser
+    ? `<div class="font-semibold" style="color:#60a5fa;">You</div><div style="color:#cbd5e1;">${escHtml(text)}</div>`
+    : `<div class="font-semibold" style="color:#4ade80;">Assistant</div><div style="color:#cbd5e1;white-space:pre-wrap;">${escHtml(text)}</div>`;
+  el.appendChild(bubble);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ---------------------------------------------------------------------------
+// In-browser AI model (WebLLM) — no server, no API key, no signup for anyone.
+// Model runs entirely on the visitor's device via WebGPU.
+// ---------------------------------------------------------------------------
+const LLM_MODEL_ID = "Llama-3.2-1B-Instruct-q4f32_1-MLC"; // f32, not f16 — works on GPUs without the shader-f16 feature
+let llmEngine = null;
+let llmHistory = [];
+
+function buildDashboardSystemPrompt() {
+  const d = dashboardData || {};
+  const v = d.verdict || {};
+  const lines = [];
+  lines.push('You are an embedded analyst for a "Daily Market Briefing" dashboard. Answer ONLY using the data below — do not invent prices, news, or events. Be decisive: give a clear bullish/bearish/neutral read with specific reasons when asked, not just a list of facts. This is informational only; the user already knows that, so do not repeat disclaimers. Keep answers short (2-4 sentences).');
+  lines.push('');
+  lines.push(`TODAY: ${d.today_str || 'unknown'}`);
+  lines.push(`VERDICT: ${v.verdict || 'N/A'} (confidence ${v.confidence ?? '?'}%) — ${v.justification || ''}`);
+  lines.push(`VIX: ${v.vix ?? '?'}  S&P500: ${v.sp500_change ?? '?'}%  Nasdaq: ${v.nasdaq_change ?? '?'}%`);
+
+  const sectors = (d.sector_heatmap || []).map(s => `${s.name} ${s.change_pct >= 0 ? '+' : ''}${s.change_pct}%`).join(', ');
+  if (sectors) lines.push(`SECTORS: ${sectors}`);
+
+  const watch = (d.watchlist || []).slice(0, 8)
+    .map(w => `${w.ticker}${w.change_pct != null ? ' ' + (w.change_pct >= 0 ? '+' : '') + w.change_pct + '%' : ''} (${w.sentiment_label})`)
+    .join(', ');
+  if (watch) lines.push(`WATCHLIST: ${watch}`);
+
+  const news = (d.news || []).slice(0, 10).map(n => `- [${n.sentiment_label}/${n.impact_level}] ${n.title}`).join('\n');
+  if (news) lines.push(`TOP NEWS:\n${news}`);
+
+  const movers = (d.today_top_movers || []).map(m => `${m.ticker} +${m.change_pct}%`).join(', ');
+  if (movers) lines.push(`TOP MOVERS TODAY: ${movers}`);
+
+  const earnings = (d.earnings_board || [])
+    .filter(day => day.companies && day.companies.length)
+    .map(day => `${day.day_label}: ${day.companies.map(c => c.ticker).join(', ')}`)
+    .join(' | ');
+  if (earnings) lines.push(`UPCOMING EARNINGS: ${earnings}`);
+
+  return lines.join('\n');
+}
+
+async function ensureLlmLoaded() {
+  if (llmEngine) return llmEngine;
+  if (!navigator.gpu) {
+    throw new Error('NO_WEBGPU');
+  }
+  // navigator.gpu existing doesn't guarantee a usable GPU — hardware acceleration
+  // disabled, a VM/remote session, or a blocklisted driver all leave it present
+  // but unable to produce an adapter. Check for real before loading the model.
+  let adapter = null;
+  try {
+    adapter = await navigator.gpu.requestAdapter();
+  } catch (e) {
+    adapter = null;
+  }
+  if (!adapter) {
+    throw new Error('NO_WEBGPU');
+  }
+  const statusEl = document.getElementById('chat-load-status');
+  statusEl.style.display = '';
+  statusEl.textContent = 'Loading AI model (one-time ~900MB download, cached in your browser after)…';
+
+  const webllm = await import("https://esm.run/@mlc-ai/web-llm");
+  llmEngine = await webllm.CreateMLCEngine(LLM_MODEL_ID, {
+    initProgressCallback: (p) => {
+      statusEl.textContent = p.text || `Loading model… ${Math.round((p.progress || 0) * 100)}%`;
+    },
+  });
+  statusEl.style.display = 'none';
+  return llmEngine;
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-send-btn');
+  const question = input.value.trim();
+  if (!question) return;
+
+  appendChatMessage('user', question);
+  input.value = '';
+  input.disabled = true;
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  try {
+    const engine = await ensureLlmLoaded();
+    llmHistory.push({ role: 'user', content: question });
+    const messages = [
+      { role: 'system', content: buildDashboardSystemPrompt() },
+      ...llmHistory.slice(-6),
+    ];
+    const reply = await engine.chat.completions.create({ messages, temperature: 0.7 });
+    const answer = (reply.choices[0].message.content || '').trim() || 'No response.';
+    llmHistory.push({ role: 'assistant', content: answer });
+    appendChatMessage('assistant', answer);
+  } catch (e) {
+    if (e && e.message === 'NO_WEBGPU') {
+      appendChatMessage('assistant', "No usable GPU was found for in-browser AI. If you're on a normal computer (not a VM/remote session), check that hardware acceleration is enabled in your browser (Chrome: chrome://settings → System → \"Use hardware acceleration when available\", then restart). Check webgpureport.org to confirm WebGPU works on this device/browser.");
+    } else {
+      console.error('LLM error:', e);
+      llmEngine = null; // allow a clean retry instead of staying stuck on a half-loaded engine
+      const detail = (e && (e.message || String(e))) || 'unknown error';
+      appendChatMessage('assistant', `The AI model hit an error: ${detail}`);
+      document.getElementById('chat-load-status').style.display = 'none';
+    }
+  } finally {
+    input.disabled = false;
+    btn.disabled = false;
+    btn.textContent = 'Ask';
+    input.focus();
+  }
 }
 </script>
 </body>

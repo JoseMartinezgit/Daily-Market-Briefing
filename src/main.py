@@ -235,7 +235,7 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
     # 9. Build sources status
     # ------------------------------------------------------------------
     sources_status = {
-        "rss": len(rss_failed) < len([f for f in rss_failed]),
+        "rss": len(rss_articles) > 0,
         "finnhub": "Finnhub" not in failed_sources,
         "newsapi": "NewsAPI" not in failed_sources,
         "alpha_vantage": "Alpha Vantage" not in failed_sources,
