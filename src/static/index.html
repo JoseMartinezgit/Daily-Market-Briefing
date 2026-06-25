@@ -127,28 +127,28 @@ tailwind.config = {
     <div id="snapshot-row" class="grid gap-3 mb-4" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));">
     </div>
 
-    <!-- SECTOR HEATMAP + RISKS -->
+    <!-- SECTOR HEATMAP / EARNINGS BOARD  ·  STOCKS OF THE DAY / TOMORROW'S PICKS -->
     <div class="grid gap-4 mb-4" style="grid-template-columns:2fr 1fr;">
-      <div class="panel p-4">
-        <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">SECTOR HEATMAP</div>
-        <div id="heatmap-grid" class="grid gap-2" style="grid-template-columns:repeat(4,1fr);"></div>
+      <div class="flex flex-col gap-4">
+        <div class="panel p-4">
+          <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">SECTOR HEATMAP</div>
+          <div id="heatmap-grid" class="grid gap-2" style="grid-template-columns:repeat(4,1fr);"></div>
+        </div>
+        <div class="panel p-4">
+          <div class="text-xs font-semibold mb-3" style="color:#f59e0b;letter-spacing:0.1em;">UPCOMING EARNINGS REPORTS</div>
+          <div id="earnings-board-container" style="max-height:340px;overflow-y:auto;"></div>
+        </div>
       </div>
-      <div class="panel p-4">
-        <div class="text-xs font-semibold mb-3" style="color:#f59e0b;letter-spacing:0.1em;">UPCOMING EARNINGS REPORTS</div>
-        <div id="earnings-board-container" style="max-height:340px;overflow-y:auto;"></div>
-      </div>
-    </div>
-
-    <!-- STOCKS OF THE DAY + TOMORROW'S TOP PICKS -->
-    <div class="grid gap-4 mb-4" style="grid-template-columns:1fr 1fr;">
-      <div class="panel p-4">
-        <div class="text-xs font-semibold mb-3" style="color:#4ade80;letter-spacing:0.1em;">🏆 STOCKS OF THE DAY</div>
-        <div id="top-movers-container"></div>
-      </div>
-      <div class="panel p-4">
-        <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">🔮 TOMORROW'S TOP PICKS</div>
-        <div class="text-xs mb-2" style="color:#4b5563;">Heuristic shortlist, not a prediction — based on today's news momentum and confirmed earnings catalysts.</div>
-        <div id="tomorrow-picks-container"></div>
+      <div class="flex flex-col gap-4">
+        <div class="panel p-4">
+          <div class="text-xs font-semibold mb-3" style="color:#4ade80;letter-spacing:0.1em;">🏆 STOCKS OF THE DAY</div>
+          <div id="top-movers-container"></div>
+        </div>
+        <div class="panel p-4">
+          <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">🔮 TOMORROW'S TOP PICKS</div>
+          <div class="text-xs mb-2" style="color:#4b5563;">Heuristic shortlist, not a prediction — based on today's news momentum and confirmed earnings catalysts.</div>
+          <div id="tomorrow-picks-container"></div>
+        </div>
       </div>
     </div>
 
@@ -197,12 +197,6 @@ tailwind.config = {
 
     <!-- SOURCES STATUS -->
     <div id="sources-bar" class="mt-3 flex flex-wrap gap-2"></div>
-
-    <!-- UPCOMING EARNINGS CALENDAR -->
-    <div class="panel p-4 mt-4">
-      <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">UPCOMING EARNINGS</div>
-      <div id="earnings-calendar-container"></div>
-    </div>
 
     <!-- SAVED REPORTS -->
     <div class="panel p-4 mt-4">
@@ -333,7 +327,6 @@ function renderAll(data) {
   renderEvents(data.events || []);
   renderWatchlist(data.watchlist || []);
   renderEarningsReactions(data.earnings_reactions || []);
-  renderEarningsCalendar(data.earnings_calendar || []);
   renderEarningsBoard(data.earnings_board || []);
   renderSourcesBar(data.sources_status || {}, data.failed_sources || []);
   updateLastUpdated(data.last_updated);
@@ -644,42 +637,6 @@ function renderEarningsReactions(reactions) {
 }
 
 // ---------------------------------------------------------------------------
-// Upcoming Earnings Calendar
-// ---------------------------------------------------------------------------
-function renderEarningsCalendar(calendar) {
-  const el = document.getElementById('earnings-calendar-container');
-  if (!el) return;
-  if (!calendar || !calendar.length) {
-    el.innerHTML = '<div class="text-xs" style="color:#4b5563;">No upcoming earnings dates found for the watchlist.</div>';
-    return;
-  }
-  el.innerHTML = calendar.map(e => {
-    const avg = e.avg_reaction_pct != null
-      ? `<span class="${e.avg_reaction_pct >= 0 ? 'up' : 'down'} font-semibold">${e.avg_reaction_pct >= 0 ? '▲' : '▼'} ${Math.abs(e.avg_reaction_pct).toFixed(2)}%</span>`
-      : '<span style="color:#4b5563;">N/A</span>';
-    const beatRate = e.beat_rate ? `<span style="color:#94a3b8;">${e.beat_rate} beats</span>` : '';
-    const historyChips = (e.history || []).map(h => {
-      if (h.reaction_pct == null) return `<span class="ticker-chip" title="${h.date}">—</span>`;
-      const cls = h.reaction_pct >= 0 ? 'up' : 'down';
-      const arrow = h.reaction_pct >= 0 ? '▲' : '▼';
-      return `<span class="ticker-chip ${cls}" title="${h.date} (${h.time})">${arrow}${Math.abs(h.reaction_pct).toFixed(1)}%</span>`;
-    }).join(' ');
-    return `<div class="flex items-center justify-between py-2 flex-wrap gap-2" style="border-bottom:1px solid #1e2535;">
-      <div style="min-width:160px;">
-        <div class="font-mono font-bold text-sm">${e.ticker}</div>
-        <div class="text-xs truncate" style="color:#8892a4;max-width:160px;">${e.name}</div>
-      </div>
-      <div class="text-xs" style="color:#60a5fa;min-width:110px;">${e.next_date}<br><span style="color:#4b5563;">${e.next_time}</span></div>
-      <div class="flex flex-col items-start gap-1" style="min-width:100px;">
-        ${avg}
-        <span class="text-xs">${beatRate}</span>
-      </div>
-      <div class="flex gap-1 flex-wrap" style="max-width:280px;">${historyChips}</div>
-    </div>`;
-  }).join('');
-}
-
-// ---------------------------------------------------------------------------
 // Upcoming Earnings Reports (next 3 trading days)
 // ---------------------------------------------------------------------------
 function renderEarningsBoard(board) {
@@ -702,13 +659,15 @@ function renderEarningsBoard(board) {
         ? `${c.consensus || 'N/A'} · Target ${fmtPrice(c.analyst_target_mean)}${c.num_analysts ? ` (${c.num_analysts} analysts)` : ''}`
         : 'No analyst data';
       const beatLine = c.beat_rate ? `Beat estimates ${c.beat_rate} times in last ${c.history.length} reports` : 'No recent earnings history';
-      const historyChips = (c.history || []).map(h => {
-        if (h.reaction_pct == null) return `<span class="ticker-chip" title="${h.date}">${h.beat === true ? '✓' : h.beat === false ? '✗' : '—'}</span>`;
+      const historyLines = (c.history || []).map(h => {
+        const beatLabel = h.beat === true ? 'Beat' : h.beat === false ? 'Missed' : 'Reported';
         const cls = h.reaction_pct >= 0 ? 'up' : 'down';
+        if (h.reaction_pct == null) {
+          return `<div class="text-xs" style="color:#6b7280;">${h.date} (${h.time}): ${beatLabel} estimates — move unavailable</div>`;
+        }
         const arrow = h.reaction_pct >= 0 ? '▲' : '▼';
-        const beatMark = h.beat === true ? '✓' : h.beat === false ? '✗' : '';
-        return `<span class="ticker-chip ${cls}" title="${h.date} (${h.time})">${beatMark}${arrow}${Math.abs(h.reaction_pct).toFixed(1)}%</span>`;
-      }).join(' ');
+        return `<div class="text-xs" style="color:#6b7280;">${h.date} (${h.time}): <span style="color:#94a3b8;">${beatLabel} estimates</span> → <span class="${cls} font-semibold">${arrow} ${Math.abs(h.reaction_pct).toFixed(2)}%</span> next session</div>`;
+      }).join('');
       return `<div class="py-2" style="border-bottom:1px solid #1e2535;">
         <div class="flex items-center justify-between flex-wrap gap-1">
           <div>
@@ -719,8 +678,8 @@ function renderEarningsBoard(board) {
           <div class="text-xs" style="color:#6b7280;">${mcapStr}</div>
         </div>
         <div class="text-xs mt-1" style="color:#60a5fa;">${escHtml(consensusLine)}</div>
-        <div class="text-xs mt-0.5" style="color:#6b7280;">${escHtml(beatLine)}</div>
-        <div class="flex gap-1 flex-wrap mt-1">${historyChips}</div>
+        <div class="text-xs mt-0.5 font-semibold" style="color:#94a3b8;">${escHtml(beatLine)}</div>
+        <div class="mt-1 flex flex-col gap-0.5">${historyLines}</div>
       </div>`;
     }).join('');
     return `<div class="mb-3">

@@ -8,6 +8,7 @@ for multi-ticker requests and single-level for single-ticker requests.
 import logging
 import datetime
 import json
+import time
 from typing import Optional
 import yfinance as yf
 import pandas as pd
@@ -561,46 +562,56 @@ def _compute_rsi(closes: pd.Series, period: int = 14) -> Optional[float]:
         return None
 
 
-def _fetch_analyst_consensus(tk: "yf.Ticker") -> dict:
+def _fetch_analyst_consensus(tk: "yf.Ticker", retries: int = 2, retry_delay: float = 1.5) -> dict:
     """
     Analyst price targets + consensus rating using yfinance's dedicated,
     lightweight endpoints — NOT the full `.info` blob, which is slow and
-    frequently returns incomplete data under load.
+    frequently returns incomplete data under load. These endpoints can still
+    fail transiently under rate limiting, so retry briefly before giving up.
     """
     result = {
         "analyst_target_mean": None, "analyst_target_high": None,
         "analyst_target_low": None, "num_analysts": None, "consensus": None,
     }
-    try:
-        targets = tk.analyst_price_targets
-        if targets:
-            result["analyst_target_mean"] = _safe_float(targets.get("mean"), None)
-            result["analyst_target_high"] = _safe_float(targets.get("high"), None)
-            result["analyst_target_low"] = _safe_float(targets.get("low"), None)
-    except Exception:
-        pass
 
-    try:
-        rec = tk.recommendations_summary
-        if rec is not None and not rec.empty:
-            current = rec[rec["period"] == "0m"]
-            row = current.iloc[0] if not current.empty else rec.iloc[0]
-            strong_buy, buy = int(row.get("strongBuy", 0)), int(row.get("buy", 0))
-            hold = int(row.get("hold", 0))
-            sell, strong_sell = int(row.get("sell", 0)), int(row.get("strongSell", 0))
-            total = strong_buy + buy + hold + sell + strong_sell
-            if total:
-                result["num_analysts"] = total
-                bullish_frac = (strong_buy + buy) / total
-                bearish_frac = (sell + strong_sell) / total
-                if bullish_frac >= 0.6:
-                    result["consensus"] = "BUY"
-                elif bearish_frac >= 0.4:
-                    result["consensus"] = "SELL"
-                else:
-                    result["consensus"] = "HOLD"
-    except Exception:
-        pass
+    for attempt in range(retries):
+        try:
+            targets = tk.analyst_price_targets
+            if targets and targets.get("mean") is not None:
+                result["analyst_target_mean"] = _safe_float(targets.get("mean"), None)
+                result["analyst_target_high"] = _safe_float(targets.get("high"), None)
+                result["analyst_target_low"] = _safe_float(targets.get("low"), None)
+                break
+        except Exception:
+            pass
+        if attempt < retries - 1:
+            time.sleep(retry_delay)
+
+    for attempt in range(retries):
+        try:
+            rec = tk.recommendations_summary
+            if rec is not None and not rec.empty:
+                current = rec[rec["period"] == "0m"]
+                row = current.iloc[0] if not current.empty else rec.iloc[0]
+                strong_buy, buy = int(row.get("strongBuy", 0)), int(row.get("buy", 0))
+                hold = int(row.get("hold", 0))
+                sell, strong_sell = int(row.get("sell", 0)), int(row.get("strongSell", 0))
+                total = strong_buy + buy + hold + sell + strong_sell
+                if total:
+                    result["num_analysts"] = total
+                    bullish_frac = (strong_buy + buy) / total
+                    bearish_frac = (sell + strong_sell) / total
+                    if bullish_frac >= 0.6:
+                        result["consensus"] = "BUY"
+                    elif bearish_frac >= 0.4:
+                        result["consensus"] = "SELL"
+                    else:
+                        result["consensus"] = "HOLD"
+                    break
+        except Exception:
+            pass
+        if attempt < retries - 1:
+            time.sleep(retry_delay)
 
     return result
 
@@ -610,21 +621,32 @@ def fetch_stock_technicals(tickers: list[str]) -> dict[str, dict]:
     Per-ticker enrichment for a small shortlist (NOT meant for bulk use):
     monthly_rsi, analyst price targets, consensus rating.
     One yf.Ticker per ticker — fine for a handful of tickers, not 100s.
+    Cached per-ticker for 6h since targets/consensus don't shift intraday.
     """
+    from src.cache import cache
+
     results: dict[str, dict] = {}
     for sym in tickers:
+        cache_key = f"technicals:{sym}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            results[sym] = cached
+            continue
         try:
             tk = yf.Ticker(sym)
             monthly_hist = tk.history(period="3y", interval="1mo", auto_adjust=True)
             monthly_rsi = _compute_rsi(monthly_hist["Close"]) if not monthly_hist.empty else None
-            results[sym] = {"monthly_rsi": monthly_rsi, **_fetch_analyst_consensus(tk)}
+            entry = {"monthly_rsi": monthly_rsi, **_fetch_analyst_consensus(tk)}
         except Exception as exc:
             logger.debug("Stock technicals failed for %s: %s", sym, exc)
-            results[sym] = {
+            entry = {
                 "monthly_rsi": None, "analyst_target_mean": None,
                 "analyst_target_high": None, "analyst_target_low": None,
                 "num_analysts": None, "consensus": None,
             }
+        results[sym] = entry
+        if entry.get("analyst_target_mean") is not None:
+            cache.set(cache_key, entry, ttl=6 * 3600)
     return results
 
 
