@@ -539,3 +539,60 @@ def fetch_nasdaq100_snapshot() -> list[dict]:
             logger.debug("Nasdaq-100 quote failed for %s: %s", sym, exc)
 
     return results
+
+
+def _compute_rsi(closes: pd.Series, period: int = 14) -> Optional[float]:
+    """Standard 14-period RSI applied to whatever bar interval the series uses."""
+    if closes is None or len(closes) < period + 1:
+        return None
+    try:
+        delta = closes.diff()
+        gain = delta.where(delta > 0, 0.0)
+        loss = -delta.where(delta < 0, 0.0)
+        avg_gain = gain.rolling(window=period).mean()
+        avg_loss = loss.rolling(window=period).mean()
+        last_avg_loss = avg_loss.iloc[-1]
+        if last_avg_loss == 0:
+            return 100.0
+        rs = avg_gain.iloc[-1] / last_avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        return round(float(rsi), 1) if rsi == rsi else None  # NaN check
+    except Exception:
+        return None
+
+
+def fetch_stock_technicals(tickers: list[str]) -> dict[str, dict]:
+    """
+    Per-ticker enrichment for a small shortlist (NOT meant for bulk use):
+    - monthly_rsi: 14-period RSI computed on monthly closes
+    - analyst_target_mean / high / low, num_analysts: from yfinance's `.info`
+    One yf.Ticker per ticker (history + info) — fine for ~6 tickers, not 100s.
+    """
+    results: dict[str, dict] = {}
+    for sym in tickers:
+        try:
+            tk = yf.Ticker(sym)
+            monthly_hist = tk.history(period="3y", interval="1mo", auto_adjust=True)
+            monthly_rsi = _compute_rsi(monthly_hist["Close"]) if not monthly_hist.empty else None
+
+            info = {}
+            try:
+                info = tk.info or {}
+            except Exception:
+                info = {}
+
+            results[sym] = {
+                "monthly_rsi": monthly_rsi,
+                "analyst_target_mean": _safe_float(info.get("targetMeanPrice"), None),
+                "analyst_target_high": _safe_float(info.get("targetHighPrice"), None),
+                "analyst_target_low": _safe_float(info.get("targetLowPrice"), None),
+                "num_analysts": info.get("numberOfAnalystOpinions"),
+            }
+        except Exception as exc:
+            logger.debug("Stock technicals failed for %s: %s", sym, exc)
+            results[sym] = {
+                "monthly_rsi": None, "analyst_target_mean": None,
+                "analyst_target_high": None, "analyst_target_low": None,
+                "num_analysts": None,
+            }
+    return results

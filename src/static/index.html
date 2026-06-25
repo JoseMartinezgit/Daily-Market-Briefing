@@ -437,6 +437,19 @@ function renderHeatmap(sectors) {
 // ---------------------------------------------------------------------------
 const RANK_MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
+function fmtTechnicals(entry) {
+  const parts = [];
+  if (entry.monthly_rsi != null) {
+    const tag = entry.monthly_rsi >= 70 ? ' (Overbought)' : entry.monthly_rsi <= 30 ? ' (Oversold)' : '';
+    parts.push(`Monthly RSI: ${entry.monthly_rsi.toFixed(1)}${tag}`);
+  }
+  if (entry.analyst_target_mean != null) {
+    const n = entry.num_analysts ? ` · ${entry.num_analysts} analysts` : '';
+    parts.push(`Avg Analyst Target: ${fmtPrice(entry.analyst_target_mean)}${n}`);
+  }
+  return parts.length ? `<div class="text-xs mt-1" style="color:#60a5fa;">${escHtml(parts.join('  ·  '))}</div>` : '';
+}
+
 function renderTopMovers(movers) {
   const el = document.getElementById('top-movers-container');
   if (!movers || !movers.length) {
@@ -458,6 +471,7 @@ function renderTopMovers(movers) {
           </div>
         </div>
         <div class="text-xs mt-1" style="color:#6b7280;">${escHtml(m.reason)}</div>
+        ${fmtTechnicals(m)}
       </div>
     </div>`).join('');
 }
@@ -488,6 +502,7 @@ function renderTomorrowPicks(picks) {
           </div>
         </div>
         <div class="text-xs mt-1" style="color:#6b7280;">${escHtml(p.reason)}</div>
+        ${fmtTechnicals(p)}
       </div>
     </div>`;
   }).join('');

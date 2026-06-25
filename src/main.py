@@ -80,7 +80,7 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
         fetch_market_snapshot, fetch_vix_data,
         fetch_sector_heatmap, fetch_watchlist_prices,
         fetch_earnings_reactions, fetch_earnings_calendar,
-        fetch_nasdaq100_snapshot,
+        fetch_nasdaq100_snapshot, fetch_stock_technicals,
     )
     from src.aggregators.events import get_all_events
     from src.analysis.sentiment import score_articles_batch, check_keyword_alerts
@@ -203,6 +203,12 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
             nasdaq100_snapshot, processed_news, earnings_calendar,
             exclude_tickers={m["ticker"] for m in today_top_movers},
         )
+
+        # Enrich just the handful of tickers shown (monthly RSI + analyst targets)
+        highlight_tickers = [m["ticker"] for m in today_top_movers] + [p["ticker"] for p in tomorrow_candidates]
+        technicals = fetch_stock_technicals(highlight_tickers)
+        for entry in today_top_movers + tomorrow_candidates:
+            entry.update(technicals.get(entry["ticker"], {}))
     except Exception as exc:
         logger.warning("Stock highlights failed: %s", exc)
 
