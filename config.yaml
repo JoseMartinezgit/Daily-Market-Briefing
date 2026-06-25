@@ -83,6 +83,8 @@ market_symbols:
       name: "Dow Jones"
     - symbol: "^RUT"
       name: "Russell 2000"
+    - symbol: "VT"
+      name: "Global Markets"
     - symbol: "^VIX"
       name: "VIX"
   commodities:

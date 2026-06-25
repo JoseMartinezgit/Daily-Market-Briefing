@@ -389,7 +389,10 @@ STATIC_DIR = Path(__file__).parent / "static"
 @app.get("/", response_class=HTMLResponse)
 async def root():
     html_path = STATIC_DIR / "index.html"
-    return HTMLResponse(html_path.read_text(encoding="utf-8"))
+    return HTMLResponse(
+        html_path.read_text(encoding="utf-8"),
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+    )
 
 
 # ---------------------------------------------------------------------------

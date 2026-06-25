@@ -63,11 +63,6 @@ tailwind.config = {
   .verdict-MIXED { background: linear-gradient(135deg, rgba(100,116,139,0.15) 0%, rgba(51,65,85,0.1) 100%); border: 1px solid rgba(100,116,139,0.3); }
   .loading-pulse { animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .nav-tab { padding: 8px 16px; font-size: 13px; font-weight: 500; color: #8892a4; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
-  .nav-tab:hover { color: #e2e8f0; }
-  .nav-tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
-  .page { display: none; }
-  .page.active { display: block; }
   .snapshot-card { background: #161b27; border: 1px solid #1e2535; border-radius: 8px; padding: 12px 14px; }
   .spin { animation: spin 1s linear infinite; }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
@@ -81,10 +76,6 @@ tailwind.config = {
   <div class="max-w-screen-2xl mx-auto px-4 flex items-center justify-between h-12">
     <div class="flex items-center gap-6">
       <span class="font-bold text-sm tracking-widest text-blue-400" style="letter-spacing:0.15em;">MARKET BRIEFING</span>
-      <div class="flex">
-        <div class="nav-tab active" onclick="switchPage('dashboard',this)">Dashboard</div>
-        <div class="nav-tab" onclick="switchPage('history',this)">History</div>
-      </div>
     </div>
     <div class="flex items-center gap-3">
       <span id="last-updated" class="text-xs" style="color:#4b5563;">Loading…</span>
@@ -108,7 +99,7 @@ tailwind.config = {
   <!-- ====================================================================== -->
   <!-- DASHBOARD PAGE -->
   <!-- ====================================================================== -->
-  <div id="page-dashboard" class="page active" style="display:none;">
+  <div id="page-dashboard" style="display:none;">
 
     <!-- VERDICT BANNER -->
     <div id="verdict-banner" class="verdict-banner verdict-MIXED mb-4">
@@ -207,13 +198,8 @@ tailwind.config = {
       <div id="report-viewer" class="prose prose-invert max-w-none" style="display:none;"></div>
     </div>
 
-  </div><!-- end dashboard page -->
-
-  <!-- ====================================================================== -->
-  <!-- HISTORY PAGE -->
-  <!-- ====================================================================== -->
-  <div id="page-history" class="page">
-    <div class="grid gap-4" style="grid-template-columns:1fr 1fr;">
+    <!-- HISTORY CHARTS -->
+    <div class="grid gap-4 mt-4" style="grid-template-columns:1fr 1fr;">
       <div class="panel p-4">
         <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">DAILY VERDICT HISTORY</div>
         <canvas id="verdict-chart" height="200"></canvas>
@@ -227,7 +213,8 @@ tailwind.config = {
       <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">S&P 500 DAILY CHANGE HISTORY</div>
       <canvas id="sp500-chart" height="120"></canvas>
     </div>
-  </div>
+
+  </div><!-- end dashboard page -->
 
 </div><!-- end max-w container -->
 
@@ -256,23 +243,13 @@ let verdictChart = null, vixChart = null, sp500Chart = null;
 document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
   loadReports();
+  loadHistory();
   // Auto-poll while loading
   const pollTimer = setInterval(() => {
     if (!dashboardData) loadDashboard();
     else clearInterval(pollTimer);
   }, 4000);
 });
-
-// ---------------------------------------------------------------------------
-// Page navigation
-// ---------------------------------------------------------------------------
-function switchPage(name, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  el.classList.add('active');
-  if (name === 'history') loadHistory();
-}
 
 // ---------------------------------------------------------------------------
 // Data fetching
