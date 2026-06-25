@@ -488,3 +488,54 @@ def fetch_earnings_calendar(tickers: list[str], lookback_count: int = 7) -> list
 
     results.sort(key=lambda r: r["next_date"])
     return results
+
+
+def _load_nasdaq100_constituents() -> list[dict]:
+    try:
+        with open(cfg.DATA_DIR / "nasdaq100_constituents.json", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as exc:
+        logger.warning("Could not load Nasdaq-100 constituents: %s", exc)
+        return []
+
+
+def fetch_nasdaq100_snapshot() -> list[dict]:
+    """
+    Bulk-fetch current price + % change for all Nasdaq-100 constituents
+    (one bulk yfinance call instead of per-ticker requests).
+    Returns list of {ticker, name, price, change_pct}.
+    """
+    constituents = _load_nasdaq100_constituents()
+    if not constituents:
+        return []
+
+    symbols = [c["ticker"] for c in constituents]
+    name_map = {c["ticker"]: c["name"] for c in constituents}
+
+    data = None
+    try:
+        data = yf.download(symbols, period="2d", interval="1d", auto_adjust=True, progress=False, threads=True)
+    except Exception as exc:
+        logger.warning("Nasdaq-100 bulk download failed: %s", exc)
+
+    results = []
+    single = len(symbols) == 1
+    for sym in symbols:
+        try:
+            quote = None
+            if data is not None and not data.empty:
+                closes = _get_close_series(data, sym, single)
+                quote = _series_to_quote(closes)
+            if quote is None:
+                quote = _fetch_single_ticker(sym)
+            if quote:
+                results.append({
+                    "ticker": sym,
+                    "name": name_map.get(sym, sym),
+                    "price": quote["price"],
+                    "change_pct": quote["change_pct"],
+                })
+        except Exception as exc:
+            logger.debug("Nasdaq-100 quote failed for %s: %s", sym, exc)
+
+    return results

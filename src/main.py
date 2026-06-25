@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 
 from src.config import cfg
-from src.database import init_db, SessionLocal, NewsItem, DayVerdict, MarketSnapshot, EconomicEvent, DailyReport
+from src.database import init_db, SessionLocal, NewsItem, DayVerdict, MarketSnapshot, EconomicEvent
 from src.cache import cache
 
 logger = logging.getLogger(__name__)
@@ -80,11 +80,13 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
         fetch_market_snapshot, fetch_vix_data,
         fetch_sector_heatmap, fetch_watchlist_prices,
         fetch_earnings_reactions, fetch_earnings_calendar,
+        fetch_nasdaq100_snapshot,
     )
     from src.aggregators.events import get_all_events
     from src.analysis.sentiment import score_articles_batch, check_keyword_alerts
     from src.analysis.ticker_mapping import build_ticker_list, build_watchlist
     from src.analysis.verdict import compute_verdict
+    from src.analysis.highlights import compute_today_top_movers, compute_tomorrow_candidates
     from src.report import generate_report
 
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -189,6 +191,22 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
         logger.warning("Earnings calendar failed: %s", exc)
 
     # ------------------------------------------------------------------
+    # 7b. Stock highlights: today's top Nasdaq-100 gainers + tomorrow's
+    #     momentum/catalyst candidates (heuristic, not a prediction)
+    # ------------------------------------------------------------------
+    today_top_movers = []
+    tomorrow_candidates = []
+    try:
+        nasdaq100_snapshot = fetch_nasdaq100_snapshot()
+        today_top_movers = compute_today_top_movers(nasdaq100_snapshot, processed_news)
+        tomorrow_candidates = compute_tomorrow_candidates(
+            nasdaq100_snapshot, processed_news, earnings_calendar,
+            exclude_tickers={m["ticker"] for m in today_top_movers},
+        )
+    except Exception as exc:
+        logger.warning("Stock highlights failed: %s", exc)
+
+    # ------------------------------------------------------------------
     # 8. Persist to DB
     # ------------------------------------------------------------------
     _persist_to_db(today_str, processed_news, verdict_data, snapshot, events)
@@ -217,6 +235,8 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
         "watchlist": watchlist,
         "earnings_reactions": earnings_reactions,
         "earnings_calendar": earnings_calendar,
+        "today_top_movers": today_top_movers,
+        "tomorrow_candidates": tomorrow_candidates,
         "sources_status": sources_status,
         "failed_sources": list(set(failed_sources)),
         "last_updated": datetime.datetime.now().isoformat(),
@@ -548,10 +568,10 @@ async def list_reports():
         # Try to get verdict from DB
         db = SessionLocal()
         try:
-            row = db.query(DailyReport).filter(DailyReport.date_str == date_str).first()
-            verdict = row.verdict if row else "MIXED"
+            row = db.query(DayVerdict).filter(DayVerdict.date_str == date_str).first()
+            verdict = row.verdict if row else "UNKNOWN"
         except Exception:
-            verdict = "MIXED"
+            verdict = "UNKNOWN"
         finally:
             db.close()
         result.append({"date_str": date_str, "filename": f.name, "verdict": verdict})

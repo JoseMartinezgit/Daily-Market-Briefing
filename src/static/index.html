@@ -139,6 +139,19 @@ tailwind.config = {
       </div>
     </div>
 
+    <!-- STOCKS OF THE DAY + TOMORROW'S TOP PICKS -->
+    <div class="grid gap-4 mb-4" style="grid-template-columns:1fr 1fr;">
+      <div class="panel p-4">
+        <div class="text-xs font-semibold mb-3" style="color:#4ade80;letter-spacing:0.1em;">🏆 STOCKS OF THE DAY (Nasdaq-100)</div>
+        <div id="top-movers-container"></div>
+      </div>
+      <div class="panel p-4">
+        <div class="text-xs font-semibold mb-3" style="color:#60a5fa;letter-spacing:0.1em;">🔮 TOMORROW'S TOP PICKS</div>
+        <div class="text-xs mb-2" style="color:#4b5563;">Heuristic shortlist, not a prediction — based on today's news momentum and confirmed earnings catalysts.</div>
+        <div id="tomorrow-picks-container"></div>
+      </div>
+    </div>
+
     <!-- MAIN TWO-COLUMN LAYOUT -->
     <div class="grid gap-4" style="grid-template-columns:3fr 2fr;">
 
@@ -314,6 +327,8 @@ function renderAll(data) {
   renderVerdict(data.verdict || {});
   renderSnapshot(data.market_snapshot || []);
   renderHeatmap(data.sector_heatmap || []);
+  renderTopMovers(data.today_top_movers || []);
+  renderTomorrowPicks(data.tomorrow_candidates || []);
   renderNews(allNews, currentNewsFilter);
   renderEvents(data.events || []);
   renderWatchlist(data.watchlist || []);
@@ -413,6 +428,67 @@ function renderHeatmap(sectors) {
       <div class="font-bold text-xs" style="text-align:center;">${s.name}</div>
       <div class="text-xs mt-0.5 ${cls} font-semibold">${fmtPct(s.change_pct)}</div>
       <div style="font-size:9px;color:#6b7280;margin-top:2px;font-family:monospace;">${s.etf}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Stocks of the Day / Tomorrow's Top Picks
+// ---------------------------------------------------------------------------
+const RANK_MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+function renderTopMovers(movers) {
+  const el = document.getElementById('top-movers-container');
+  if (!movers || !movers.length) {
+    el.innerHTML = '<div class="text-xs" style="color:#4b5563;">No qualifying movers found today.</div>';
+    return;
+  }
+  el.innerHTML = movers.map(m => `
+    <div class="flex items-start gap-3 py-2" style="border-bottom:1px solid #1e2535;">
+      <div class="text-xl">${RANK_MEDAL[m.rank] || m.rank}</div>
+      <div class="flex-1">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span class="font-mono font-bold text-sm">${escHtml(m.ticker)}</span>
+            <span class="text-xs ml-1" style="color:#8892a4;">${escHtml(m.name)}</span>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-bold">${fmtPrice(m.price)}</div>
+            <div class="text-xs up font-semibold">▲ ${fmtPct(m.change_pct)}</div>
+          </div>
+        </div>
+        <div class="text-xs mt-1" style="color:#6b7280;">${escHtml(m.reason)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderTomorrowPicks(picks) {
+  const el = document.getElementById('tomorrow-picks-container');
+  if (!picks || !picks.length) {
+    el.innerHTML = '<div class="text-xs" style="color:#4b5563;">No strong momentum/catalyst candidates identified for the next session.</div>';
+    return;
+  }
+  el.innerHTML = picks.map(p => {
+    const cls = p.change_pct > 0 ? 'up' : p.change_pct < 0 ? 'down' : 'neutral-val';
+    const arrow = p.change_pct > 0 ? '▲' : p.change_pct < 0 ? '▼' : '—';
+    const catalystBadge = p.has_catalyst ? '<span class="badge badge-high" style="margin-left:6px;">EARNINGS</span>' : '';
+    return `
+    <div class="flex items-start gap-3 py-2" style="border-bottom:1px solid #1e2535;">
+      <div class="text-xl">${RANK_MEDAL[p.rank] || p.rank}</div>
+      <div class="flex-1">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span class="font-mono font-bold text-sm">${escHtml(p.ticker)}</span>
+            <span class="text-xs ml-1" style="color:#8892a4;">${escHtml(p.name)}</span>
+            ${catalystBadge}
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-bold">${fmtPrice(p.price)}</div>
+            <div class="text-xs ${cls} font-semibold">${arrow} ${fmtPct(p.change_pct)}</div>
+          </div>
+        </div>
+        <div class="text-xs mt-1" style="color:#6b7280;">${escHtml(p.reason)}</div>
+      </div>
     </div>`;
   }).join('');
 }
