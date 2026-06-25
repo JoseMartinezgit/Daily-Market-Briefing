@@ -81,6 +81,7 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
         fetch_sector_heatmap, fetch_watchlist_prices,
         fetch_earnings_reactions, fetch_earnings_calendar,
         fetch_nasdaq100_snapshot, fetch_stock_technicals,
+        fetch_upcoming_earnings_board,
     )
     from src.aggregators.events import get_all_events
     from src.analysis.sentiment import score_articles_batch, check_keyword_alerts
@@ -190,6 +191,19 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
     except Exception as exc:
         logger.warning("Earnings calendar failed: %s", exc)
 
+    # Upcoming Earnings Reports board (next 3 trading days). This scans the
+    # full Nasdaq-100 + earnings_watchlist universe for earnings dates, which
+    # is slow (~60-90s) — cache for 6 hours since earnings dates don't shift
+    # intraday, so most refreshes reuse the cached board instantly.
+    earnings_board = cache.get("earnings_board")
+    if earnings_board is None:
+        try:
+            earnings_board = fetch_upcoming_earnings_board(cfg.earnings_watchlist)
+            cache.set("earnings_board", earnings_board, ttl=6 * 3600)
+        except Exception as exc:
+            logger.warning("Earnings board failed: %s", exc)
+            earnings_board = []
+
     # ------------------------------------------------------------------
     # 7b. Stock highlights: today's top Nasdaq-100 gainers + tomorrow's
     #     momentum/catalyst candidates (heuristic, not a prediction)
@@ -241,6 +255,7 @@ def _refresh_all_data(use_llm: bool = False) -> dict:
         "watchlist": watchlist,
         "earnings_reactions": earnings_reactions,
         "earnings_calendar": earnings_calendar,
+        "earnings_board": earnings_board,
         "today_top_movers": today_top_movers,
         "tomorrow_candidates": tomorrow_candidates,
         "sources_status": sources_status,

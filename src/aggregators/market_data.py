@@ -561,12 +561,55 @@ def _compute_rsi(closes: pd.Series, period: int = 14) -> Optional[float]:
         return None
 
 
+def _fetch_analyst_consensus(tk: "yf.Ticker") -> dict:
+    """
+    Analyst price targets + consensus rating using yfinance's dedicated,
+    lightweight endpoints — NOT the full `.info` blob, which is slow and
+    frequently returns incomplete data under load.
+    """
+    result = {
+        "analyst_target_mean": None, "analyst_target_high": None,
+        "analyst_target_low": None, "num_analysts": None, "consensus": None,
+    }
+    try:
+        targets = tk.analyst_price_targets
+        if targets:
+            result["analyst_target_mean"] = _safe_float(targets.get("mean"), None)
+            result["analyst_target_high"] = _safe_float(targets.get("high"), None)
+            result["analyst_target_low"] = _safe_float(targets.get("low"), None)
+    except Exception:
+        pass
+
+    try:
+        rec = tk.recommendations_summary
+        if rec is not None and not rec.empty:
+            current = rec[rec["period"] == "0m"]
+            row = current.iloc[0] if not current.empty else rec.iloc[0]
+            strong_buy, buy = int(row.get("strongBuy", 0)), int(row.get("buy", 0))
+            hold = int(row.get("hold", 0))
+            sell, strong_sell = int(row.get("sell", 0)), int(row.get("strongSell", 0))
+            total = strong_buy + buy + hold + sell + strong_sell
+            if total:
+                result["num_analysts"] = total
+                bullish_frac = (strong_buy + buy) / total
+                bearish_frac = (sell + strong_sell) / total
+                if bullish_frac >= 0.6:
+                    result["consensus"] = "BUY"
+                elif bearish_frac >= 0.4:
+                    result["consensus"] = "SELL"
+                else:
+                    result["consensus"] = "HOLD"
+    except Exception:
+        pass
+
+    return result
+
+
 def fetch_stock_technicals(tickers: list[str]) -> dict[str, dict]:
     """
     Per-ticker enrichment for a small shortlist (NOT meant for bulk use):
-    - monthly_rsi: 14-period RSI computed on monthly closes
-    - analyst_target_mean / high / low, num_analysts: from yfinance's `.info`
-    One yf.Ticker per ticker (history + info) — fine for ~6 tickers, not 100s.
+    monthly_rsi, analyst price targets, consensus rating.
+    One yf.Ticker per ticker — fine for a handful of tickers, not 100s.
     """
     results: dict[str, dict] = {}
     for sym in tickers:
@@ -574,25 +617,173 @@ def fetch_stock_technicals(tickers: list[str]) -> dict[str, dict]:
             tk = yf.Ticker(sym)
             monthly_hist = tk.history(period="3y", interval="1mo", auto_adjust=True)
             monthly_rsi = _compute_rsi(monthly_hist["Close"]) if not monthly_hist.empty else None
-
-            info = {}
-            try:
-                info = tk.info or {}
-            except Exception:
-                info = {}
-
-            results[sym] = {
-                "monthly_rsi": monthly_rsi,
-                "analyst_target_mean": _safe_float(info.get("targetMeanPrice"), None),
-                "analyst_target_high": _safe_float(info.get("targetHighPrice"), None),
-                "analyst_target_low": _safe_float(info.get("targetLowPrice"), None),
-                "num_analysts": info.get("numberOfAnalystOpinions"),
-            }
+            results[sym] = {"monthly_rsi": monthly_rsi, **_fetch_analyst_consensus(tk)}
         except Exception as exc:
             logger.debug("Stock technicals failed for %s: %s", sym, exc)
             results[sym] = {
                 "monthly_rsi": None, "analyst_target_mean": None,
                 "analyst_target_high": None, "analyst_target_low": None,
-                "num_analysts": None,
+                "num_analysts": None, "consensus": None,
             }
     return results
+
+
+def _next_n_trading_days(n: int = 3, start: Optional[datetime.date] = None) -> list[datetime.date]:
+    """Today (if a weekday) plus the next trading days, skipping weekends.
+    Does not account for market holidays."""
+    if start is None:
+        start = datetime.datetime.now().date()
+    days = []
+    cursor = start
+    while len(days) < n:
+        if cursor.weekday() < 5:
+            days.append(cursor)
+        cursor = cursor + datetime.timedelta(days=1)
+    return days
+
+
+def fetch_upcoming_earnings_board(earnings_watchlist: list[str], lookback_count: int = 4, num_days: int = 3) -> list[dict]:
+    """
+    Day-by-day board of upcoming earnings for the next `num_days` trading
+    days (today included if a weekday), drawn from a combined large-cap
+    universe (Nasdaq-100 + cfg.earnings_watchlist).
+
+    Per day selection rule:
+    - If any Nasdaq-100 names report that day: show up to 3, ranked by market cap.
+    - Else if any non-Nasdaq-100 watchlist names report: show just the single
+      biggest one by market cap.
+    - Else: that day's "companies" list is empty (UI shows "None").
+
+    Each selected company includes: historical EPS beat rate and next-session
+    price reaction for its last `lookback_count` reports, analyst price
+    targets, and consensus rating (BUY/HOLD/SELL) — NOT a forecast, just
+    transparent historical pattern + current analyst sentiment.
+
+    This scans the full ~100+ ticker universe for earnings dates (slow,
+    ~60-90s) — callers should cache the result for several hours.
+    """
+    from src.analysis.ticker_mapping import TICKER_NAMES
+
+    nasdaq100 = _load_nasdaq100_constituents()
+    nasdaq100_map = {c["ticker"]: c for c in nasdaq100}
+    universe_tickers = list(nasdaq100_map.keys())
+    for t in earnings_watchlist:
+        if t not in nasdaq100_map:
+            universe_tickers.append(t)
+
+    target_dates = _next_n_trading_days(num_days)
+    target_date_strs = {str(d) for d in target_dates}
+    today = datetime.datetime.now().date()
+
+    by_date: dict[str, list[dict]] = {str(d): [] for d in target_dates}
+
+    for ticker_sym in universe_tickers:
+        try:
+            tk = yf.Ticker(ticker_sym)
+            edates = tk.get_earnings_dates(limit=8)
+            if edates is None or edates.empty:
+                continue
+
+            next_date, next_time = None, None
+            historical_rows = []
+            for idx, row in edates.iterrows():
+                date_val = idx.date() if hasattr(idx, "date") else None
+                if date_val is None:
+                    continue
+                hour = getattr(idx, "hour", None)
+                if hour is None or hour == 0:
+                    time_of_day = "TBD"
+                elif hour < 12:
+                    time_of_day = "BMO"
+                else:
+                    time_of_day = "AMC"
+
+                if date_val >= today:
+                    if next_date is None or date_val < next_date:
+                        next_date, next_time = date_val, time_of_day
+                else:
+                    historical_rows.append((date_val, time_of_day, row))
+
+            if next_date is None or str(next_date) not in target_date_strs:
+                continue  # doesn't report within our target window — skip the expensive work below
+
+            # Market cap: from cached Nasdaq-100 data, else a lightweight live lookup
+            is_nasdaq100 = ticker_sym in nasdaq100_map
+            if is_nasdaq100:
+                market_cap = nasdaq100_map[ticker_sym].get("market_cap")
+                name = nasdaq100_map[ticker_sym]["name"]
+            else:
+                try:
+                    market_cap = tk.fast_info.get("marketCap")
+                except Exception:
+                    market_cap = None
+                name = TICKER_NAMES.get(ticker_sym, ticker_sym)
+
+            historical_rows.sort(key=lambda x: x[0], reverse=True)
+            historical_rows = historical_rows[:lookback_count]
+
+            price_hist = None
+            if historical_rows:
+                earliest = min(d for d, _, _ in historical_rows)
+                try:
+                    price_hist = tk.history(
+                        start=earliest - datetime.timedelta(days=5),
+                        end=today + datetime.timedelta(days=1),
+                    )
+                except Exception:
+                    price_hist = None
+
+            hist_results = []
+            beats = beat_total = 0
+            for date_val, time_of_day, row in historical_rows:
+                eps_actual = _to_float_or_none(row.get("Reported EPS") if hasattr(row, "get") else None)
+                eps_estimate = _to_float_or_none(row.get("EPS Estimate") if hasattr(row, "get") else None)
+                beat = None
+                if eps_actual is not None and eps_estimate is not None:
+                    beat = eps_actual > eps_estimate
+                    beat_total += 1
+                    if beat:
+                        beats += 1
+                reaction_pct = _reaction_from_history(price_hist, date_val, time_of_day)
+                hist_results.append({
+                    "date": str(date_val), "time": time_of_day,
+                    "beat": beat, "reaction_pct": reaction_pct,
+                })
+
+            entry = {
+                "ticker": ticker_sym,
+                "name": name,
+                "is_nasdaq100": is_nasdaq100,
+                "market_cap": market_cap,
+                "next_time": next_time,
+                "beat_rate": f"{beats}/{beat_total}" if beat_total else None,
+                "history": hist_results,
+                **_fetch_analyst_consensus(tk),
+            }
+            by_date[str(next_date)].append(entry)
+        except Exception as exc:
+            logger.debug("Earnings board candidate %s failed: %s", ticker_sym, exc)
+
+    board = []
+    for d in target_dates:
+        date_str = str(d)
+        candidates_today = by_date.get(date_str, [])
+        nasdaq_today = [c for c in candidates_today if c["is_nasdaq100"]]
+        non_nasdaq_today = [c for c in candidates_today if not c["is_nasdaq100"]]
+
+        if nasdaq_today:
+            nasdaq_today.sort(key=lambda c: c["market_cap"] or 0, reverse=True)
+            selected = nasdaq_today[:3]
+        elif non_nasdaq_today:
+            non_nasdaq_today.sort(key=lambda c: c["market_cap"] or 0, reverse=True)
+            selected = non_nasdaq_today[:1]
+        else:
+            selected = []
+
+        board.append({
+            "date": date_str,
+            "day_label": d.strftime("%A, %b %d"),
+            "companies": selected,
+        })
+
+    return board

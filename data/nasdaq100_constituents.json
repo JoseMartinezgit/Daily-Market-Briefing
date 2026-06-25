@@ -1,406 +1,507 @@
 [
   {
-    "ticker": "AAPL",
-    "name": "Apple Inc."
-  },
-  {
-    "ticker": "AMAT",
-    "name": "Applied Materials, Inc."
-  },
-  {
-    "ticker": "AMGN",
-    "name": "Amgen Inc."
-  },
-  {
-    "ticker": "CMCSA",
-    "name": "Comcast Corporation (Class A)"
-  },
-  {
-    "ticker": "INTC",
-    "name": "Intel Corporation"
-  },
-  {
-    "ticker": "KLAC",
-    "name": "KLA Corporation"
-  },
-  {
-    "ticker": "PCAR",
-    "name": "PACCAR Inc."
-  },
-  {
-    "ticker": "CTAS",
-    "name": "Cintas Corporation"
-  },
-  {
-    "ticker": "PAYX",
-    "name": "Paychex, Inc."
-  },
-  {
-    "ticker": "LRCX",
-    "name": "Lam Research Corporation"
-  },
-  {
-    "ticker": "ADSK",
-    "name": "Autodesk, Inc."
-  },
-  {
-    "ticker": "ROST",
-    "name": "Ross Stores, Inc."
-  },
-  {
-    "ticker": "MNST",
-    "name": "Monster Beverage Corporation"
-  },
-  {
-    "ticker": "MSFT",
-    "name": "Microsoft Corporation"
-  },
-  {
-    "ticker": "ADBE",
-    "name": "Adobe Inc."
-  },
-  {
-    "ticker": "FAST",
-    "name": "Fastenal Company"
-  },
-  {
-    "ticker": "EA",
-    "name": "Electronic Arts Inc."
-  },
-  {
-    "ticker": "CSCO",
-    "name": "Cisco Systems, Inc. (DE)"
-  },
-  {
-    "ticker": "REGN",
-    "name": "Regeneron Pharmaceuticals, Inc."
-  },
-  {
-    "ticker": "IDXX",
-    "name": "IDEXX Laboratories, Inc."
-  },
-  {
-    "ticker": "VRTX",
-    "name": "Vertex Pharmaceuticals Incorporated"
-  },
-  {
-    "ticker": "ODFL",
-    "name": "Old Dominion Freight Line, Inc."
-  },
-  {
-    "ticker": "QCOM",
-    "name": "QUALCOMM Incorporated"
-  },
-  {
-    "ticker": "GILD",
-    "name": "Gilead Sciences, Inc."
-  },
-  {
-    "ticker": "SNPS",
-    "name": "Synopsys, Inc."
-  },
-  {
-    "ticker": "SBUX",
-    "name": "Starbucks Corporation"
-  },
-  {
-    "ticker": "INTU",
-    "name": "Intuit Inc."
-  },
-  {
-    "ticker": "MCHP",
-    "name": "Microchip Technology Incorporated"
-  },
-  {
-    "ticker": "ORLY",
-    "name": "O'Reilly Automotive, Inc."
-  },
-  {
-    "ticker": "COST",
-    "name": "Costco Wholesale Corporation"
-  },
-  {
-    "ticker": "CPRT",
-    "name": "Copart, Inc. (DE)"
-  },
-  {
-    "ticker": "ASML",
-    "name": "ASML Holding N.V. New York Registry Shares"
-  },
-  {
-    "ticker": "TTWO",
-    "name": "Take-Two Interactive Software, Inc."
-  },
-  {
-    "ticker": "AMZN",
-    "name": "Amazon.com, Inc."
-  },
-  {
-    "ticker": "MSTR",
-    "name": "Strategy Inc (Class A)"
-  },
-  {
     "ticker": "NVDA",
-    "name": "NVIDIA Corporation"
+    "name": "NVIDIA Corporation",
+    "market_cap": 4815800000000.0
   },
   {
-    "ticker": "BKNG",
-    "name": "Booking Holdings Inc."
-  },
-  {
-    "ticker": "ISRG",
-    "name": "Intuitive Surgical, Inc."
-  },
-  {
-    "ticker": "MRVL",
-    "name": "Marvell Technology, Inc."
-  },
-  {
-    "ticker": "ADI",
-    "name": "Analog Devices, Inc."
-  },
-  {
-    "ticker": "AEP",
-    "name": "American Electric Power Company, Inc."
-  },
-  {
-    "ticker": "AMD",
-    "name": "Advanced Micro Devices, Inc."
-  },
-  {
-    "ticker": "ADP",
-    "name": "Automatic Data Processing, Inc."
-  },
-  {
-    "ticker": "CDNS",
-    "name": "Cadence Design Systems, Inc."
-  },
-  {
-    "ticker": "CSX",
-    "name": "CSX Corporation"
-  },
-  {
-    "ticker": "HON",
-    "name": "Honeywell International Inc."
-  },
-  {
-    "ticker": "MAR",
-    "name": "Marriott International (Class A)"
-  },
-  {
-    "ticker": "MU",
-    "name": "Micron Technology, Inc."
-  },
-  {
-    "ticker": "XEL",
-    "name": "Xcel Energy Inc."
-  },
-  {
-    "ticker": "EXC",
-    "name": "Exelon Corporation"
-  },
-  {
-    "ticker": "PEP",
-    "name": "PepsiCo, Inc."
-  },
-  {
-    "ticker": "ROP",
-    "name": "Roper Technologies, Inc."
-  },
-  {
-    "ticker": "TER",
-    "name": "Teradyne, Inc."
-  },
-  {
-    "ticker": "TXN",
-    "name": "Texas Instruments Incorporated"
-  },
-  {
-    "ticker": "WDC",
-    "name": "Western Digital Corporation"
-  },
-  {
-    "ticker": "WMT",
-    "name": "Walmart Inc."
-  },
-  {
-    "ticker": "AXON",
-    "name": "Axon Enterprise, Inc."
-  },
-  {
-    "ticker": "MDLZ",
-    "name": "Mondelez International, Inc. (Class A)"
-  },
-  {
-    "ticker": "NFLX",
-    "name": "Netflix, Inc."
-  },
-  {
-    "ticker": "STX",
-    "name": "Seagate Technology Holdings PLC Ordinary Shares (Ireland)"
-  },
-  {
-    "ticker": "ALNY",
-    "name": "Alnylam Pharmaceuticals, Inc."
+    "ticker": "AAPL",
+    "name": "Apple Inc.",
+    "market_cap": 4304570296480.0
   },
   {
     "ticker": "GOOGL",
-    "name": "Alphabet Inc. (Class A)"
-  },
-  {
-    "ticker": "MPWR",
-    "name": "Monolithic Power Systems, Inc."
-  },
-  {
-    "ticker": "DXCM",
-    "name": "DexCom, Inc."
-  },
-  {
-    "ticker": "TMUS",
-    "name": "T-Mobile US, Inc."
-  },
-  {
-    "ticker": "MELI",
-    "name": "MercadoLibre, Inc."
-  },
-  {
-    "ticker": "KDP",
-    "name": "Keurig Dr Pepper Inc."
-  },
-  {
-    "ticker": "NBIS",
-    "name": "Nebius Group N.V. (Class A) Ordinary Shares"
-  },
-  {
-    "ticker": "AVGO",
-    "name": "Broadcom Inc."
-  },
-  {
-    "ticker": "FTNT",
-    "name": "Fortinet, Inc."
-  },
-  {
-    "ticker": "TSLA",
-    "name": "Tesla, Inc."
-  },
-  {
-    "ticker": "NXPI",
-    "name": "NXP Semiconductors N.V."
-  },
-  {
-    "ticker": "FANG",
-    "name": "Diamondback Energy, Inc."
-  },
-  {
-    "ticker": "META",
-    "name": "Meta Platforms, Inc. (Class A)"
-  },
-  {
-    "ticker": "PANW",
-    "name": "Palo Alto Networks, Inc."
-  },
-  {
-    "ticker": "WDAY",
-    "name": "Workday, Inc. (Class A)"
+    "name": "Alphabet Inc. (Class A)",
+    "market_cap": 4183533640000.0
   },
   {
     "ticker": "GOOG",
-    "name": "Alphabet Inc. (Class C) Capital Stock"
+    "name": "Alphabet Inc. (Class C) Capital Stock",
+    "market_cap": 4180504640000.0
   },
   {
-    "ticker": "PYPL",
-    "name": "PayPal Holdings, Inc."
+    "ticker": "MSFT",
+    "name": "Microsoft Corporation",
+    "market_cap": 2714795746924.0
   },
   {
-    "ticker": "SHOP",
-    "name": "Shopify Inc. (Class A) Subordinate Voting Shares"
+    "ticker": "AMZN",
+    "name": "Amazon.com, Inc.",
+    "market_cap": 2520068027572.0
   },
   {
-    "ticker": "KHC",
-    "name": "The Kraft Heinz Company"
+    "ticker": "AVGO",
+    "name": "Broadcom Inc.",
+    "market_cap": 1817728666250.0
   },
   {
-    "ticker": "LITE",
-    "name": "Lumentum Holdings Inc."
+    "ticker": "META",
+    "name": "Meta Platforms, Inc. (Class A)",
+    "market_cap": 1415602523942.0
   },
   {
-    "ticker": "CCEP",
-    "name": "Coca-Cola Europacific Partners plc Ordinary Shares"
+    "ticker": "TSLA",
+    "name": "Tesla, Inc.",
+    "market_cap": 1410386985277.0
   },
   {
-    "ticker": "BKR",
-    "name": "Baker Hughes Company (Class A)"
+    "ticker": "MU",
+    "name": "Micron Technology, Inc.",
+    "market_cap": 1182440429814.0
   },
   {
-    "ticker": "PDD",
-    "name": "PDD Holdings Inc. American Depositary Shares"
+    "ticker": "WMT",
+    "name": "Walmart Inc.",
+    "market_cap": 947011419445.0
   },
   {
-    "ticker": "CRWD",
-    "name": "CrowdStrike Holdings, Inc. (Class A)"
+    "ticker": "AMD",
+    "name": "Advanced Micro Devices, Inc.",
+    "market_cap": 847488376114.0
   },
   {
-    "ticker": "DDOG",
-    "name": "Datadog, Inc. (Class A)"
+    "ticker": "ASML",
+    "name": "ASML Holding N.V. New York Registry Shares",
+    "market_cap": 679402697332.0
   },
   {
-    "ticker": "RKLB",
-    "name": "Rocket Lab Corporation"
+    "ticker": "INTC",
+    "name": "Intel Corporation",
+    "market_cap": 661672900000.0
   },
   {
-    "ticker": "PLTR",
-    "name": "Palantir Technologies Inc. (Class A)"
+    "ticker": "CSCO",
+    "name": "Cisco Systems, Inc. (DE)",
+    "market_cap": 471907972440.0
   },
   {
-    "ticker": "ABNB",
-    "name": "Airbnb, Inc. (Class A)"
+    "ticker": "LRCX",
+    "name": "Lam Research Corporation",
+    "market_cap": 468714010800.0
   },
   {
-    "ticker": "DASH",
-    "name": "DoorDash, Inc. (Class A)"
+    "ticker": "AMAT",
+    "name": "Applied Materials, Inc.",
+    "market_cap": 467618285487.0
   },
   {
-    "ticker": "APP",
-    "name": "Applovin Corporation (Class A)"
-  },
-  {
-    "ticker": "CEG",
-    "name": "Constellation Energy Corporation"
-  },
-  {
-    "ticker": "WBD",
-    "name": "Warner Bros. Discovery, Inc. Series A"
-  },
-  {
-    "ticker": "GEHC",
-    "name": "GE HealthCare Technologies Inc."
-  },
-  {
-    "ticker": "LIN",
-    "name": "Linde plc Ordinary Shares"
+    "ticker": "COST",
+    "name": "Costco Wholesale Corporation",
+    "market_cap": 426223043736.0
   },
   {
     "ticker": "ARM",
-    "name": "Arm Holdings plc American Depositary Shares"
+    "name": "Arm Holdings plc American Depositary Shares",
+    "market_cap": 382080959888.0
   },
   {
-    "ticker": "TRI",
-    "name": "Thomson Reuters Corporation Common Shares"
+    "ticker": "KLAC",
+    "name": "KLA Corporation",
+    "market_cap": 314133062501.0
   },
   {
-    "ticker": "FER",
-    "name": "Ferrovial N.V. Ordinary Shares"
-  },
-  {
-    "ticker": "ALAB",
-    "name": "Astera Labs, Inc."
+    "ticker": "NFLX",
+    "name": "Netflix, Inc.",
+    "market_cap": 302503766252.0
   },
   {
     "ticker": "SNDK",
-    "name": "Sandisk Corporation"
+    "name": "Sandisk Corporation",
+    "market_cap": 283511918101.0
+  },
+  {
+    "ticker": "TXN",
+    "name": "Texas Instruments Incorporated",
+    "market_cap": 275858225880.0
+  },
+  {
+    "ticker": "PLTR",
+    "name": "Palantir Technologies Inc. (Class A)",
+    "market_cap": 272094909390.0
+  },
+  {
+    "ticker": "MRVL",
+    "name": "Marvell Technology, Inc.",
+    "market_cap": 242057160000.0
+  },
+  {
+    "ticker": "LIN",
+    "name": "Linde plc Ordinary Shares",
+    "market_cap": 238576460248.0
+  },
+  {
+    "ticker": "PANW",
+    "name": "Palo Alto Networks, Inc.",
+    "market_cap": 232486900000.0
+  },
+  {
+    "ticker": "STX",
+    "name": "Seagate Technology Holdings PLC Ordinary Shares (Ireland)",
+    "market_cap": 222715446304.0
+  },
+  {
+    "ticker": "WDC",
+    "name": "Western Digital Corporation",
+    "market_cap": 221916696402.0
+  },
+  {
+    "ticker": "QCOM",
+    "name": "QUALCOMM Incorporated",
+    "market_cap": 208070140000.0
+  },
+  {
+    "ticker": "ADI",
+    "name": "Analog Devices, Inc.",
+    "market_cap": 201244881446.0
+  },
+  {
+    "ticker": "TMUS",
+    "name": "T-Mobile US, Inc.",
+    "market_cap": 195651790786.0
+  },
+  {
+    "ticker": "PEP",
+    "name": "PepsiCo, Inc.",
+    "market_cap": 194450128175.0
+  },
+  {
+    "ticker": "AMGN",
+    "name": "Amgen Inc.",
+    "market_cap": 189669678732.0
+  },
+  {
+    "ticker": "CRWD",
+    "name": "CrowdStrike Holdings, Inc. (Class A)",
+    "market_cap": 171327215156.0
+  },
+  {
+    "ticker": "APP",
+    "name": "Applovin Corporation (Class A)",
+    "market_cap": 156198662400.0
+  },
+  {
+    "ticker": "GILD",
+    "name": "Gilead Sciences, Inc.",
+    "market_cap": 155394885430.0
+  },
+  {
+    "ticker": "SHOP",
+    "name": "Shopify Inc. (Class A) Subordinate Voting Shares",
+    "market_cap": 147942744724.0
+  },
+  {
+    "ticker": "HON",
+    "name": "Honeywell International Inc.",
+    "market_cap": 144105392323.0
+  },
+  {
+    "ticker": "ISRG",
+    "name": "Intuitive Surgical, Inc.",
+    "market_cap": 142313254801.0
+  },
+  {
+    "ticker": "BKNG",
+    "name": "Booking Holdings Inc.",
+    "market_cap": 140446716525.0
+  },
+  {
+    "ticker": "VRTX",
+    "name": "Vertex Pharmaceuticals Incorporated",
+    "market_cap": 120608334158.0
+  },
+  {
+    "ticker": "SBUX",
+    "name": "Starbucks Corporation",
+    "market_cap": 117993141000.0
+  },
+  {
+    "ticker": "PDD",
+    "name": "PDD Holdings Inc. American Depositary Shares",
+    "market_cap": 107808048032.0
+  },
+  {
+    "ticker": "FTNT",
+    "name": "Fortinet, Inc.",
+    "market_cap": 106439158244.0
+  },
+  {
+    "ticker": "CDNS",
+    "name": "Cadence Design Systems, Inc.",
+    "market_cap": 102713878400.0
+  },
+  {
+    "ticker": "MAR",
+    "name": "Marriott International (Class A)",
+    "market_cap": 101140408238.0
+  },
+  {
+    "ticker": "CEG",
+    "name": "Constellation Energy Corporation",
+    "market_cap": 96788101182.0
+  },
+  {
+    "ticker": "MNST",
+    "name": "Monster Beverage Corporation",
+    "market_cap": 92617368017.0
+  },
+  {
+    "ticker": "SNPS",
+    "name": "Synopsys, Inc.",
+    "market_cap": 88833003247.0
+  },
+  {
+    "ticker": "ADP",
+    "name": "Automatic Data Processing, Inc.",
+    "market_cap": 88523376647.0
+  },
+  {
+    "ticker": "ABNB",
+    "name": "Airbnb, Inc. (Class A)",
+    "market_cap": 87030590881.0
+  },
+  {
+    "ticker": "CSX",
+    "name": "CSX Corporation",
+    "market_cap": 85585875707.0
+  },
+  {
+    "ticker": "MELI",
+    "name": "MercadoLibre, Inc.",
+    "market_cap": 84135522332.0
+  },
+  {
+    "ticker": "CMCSA",
+    "name": "Comcast Corporation (Class A)",
+    "market_cap": 80911318081.0
+  },
+  {
+    "ticker": "DDOG",
+    "name": "Datadog, Inc. (Class A)",
+    "market_cap": 79254536081.0
+  },
+  {
+    "ticker": "MDLZ",
+    "name": "Mondelez International, Inc. (Class A)",
+    "market_cap": 79252536553.0
+  },
+  {
+    "ticker": "ADBE",
+    "name": "Adobe Inc.",
+    "market_cap": 78136575000.0
+  },
+  {
+    "ticker": "DASH",
+    "name": "DoorDash, Inc. (Class A)",
+    "market_cap": 77527432205.0
+  },
+  {
+    "ticker": "NXPI",
+    "name": "NXP Semiconductors N.V.",
+    "market_cap": 74241645491.0
+  },
+  {
+    "ticker": "AEP",
+    "name": "American Electric Power Company, Inc.",
+    "market_cap": 73432415119.0
+  },
+  {
+    "ticker": "ROST",
+    "name": "Ross Stores, Inc.",
+    "market_cap": 73327346163.0
+  },
+  {
+    "ticker": "ORLY",
+    "name": "O'Reilly Automotive, Inc.",
+    "market_cap": 72777758238.0
+  },
+  {
+    "ticker": "INTU",
+    "name": "Intuit Inc.",
+    "market_cap": 71730975195.0
+  },
+  {
+    "ticker": "MPWR",
+    "name": "Monolithic Power Systems, Inc.",
+    "market_cap": 70499093500.0
+  },
+  {
+    "ticker": "ALAB",
+    "name": "Astera Labs, Inc.",
+    "market_cap": 68549462965.0
+  },
+  {
+    "ticker": "CTAS",
+    "name": "Cintas Corporation",
+    "market_cap": 68395397069.0
+  },
+  {
+    "ticker": "WBD",
+    "name": "Warner Bros. Discovery, Inc. Series A",
+    "market_cap": 68194118294.0
+  },
+  {
+    "ticker": "TER",
+    "name": "Teradyne, Inc.",
+    "market_cap": 66874811606.0
+  },
+  {
+    "ticker": "NBIS",
+    "name": "Nebius Group N.V. (Class A) Ordinary Shares",
+    "market_cap": 65927205054.0
+  },
+  {
+    "ticker": "LITE",
+    "name": "Lumentum Holdings Inc.",
+    "market_cap": 65548834000.0
+  },
+  {
+    "ticker": "REGN",
+    "name": "Regeneron Pharmaceuticals, Inc.",
+    "market_cap": 65359797720.0
+  },
+  {
+    "ticker": "PCAR",
+    "name": "PACCAR Inc.",
+    "market_cap": 61591277380.0
+  },
+  {
+    "ticker": "BKR",
+    "name": "Baker Hughes Company (Class A)",
+    "market_cap": 55932833137.0
   },
   {
     "ticker": "CRWV",
-    "name": "CoreWeave, Inc. (Class A)"
+    "name": "CoreWeave, Inc. (Class A)",
+    "market_cap": 55037136504.0
+  },
+  {
+    "ticker": "FAST",
+    "name": "Fastenal Company",
+    "market_cap": 53108101922.0
+  },
+  {
+    "ticker": "FANG",
+    "name": "Diamondback Energy, Inc.",
+    "market_cap": 51615363734.0
+  },
+  {
+    "ticker": "EA",
+    "name": "Electronic Arts Inc.",
+    "market_cap": 51283693508.0
+  },
+  {
+    "ticker": "XEL",
+    "name": "Xcel Energy Inc.",
+    "market_cap": 50859241053.0
+  },
+  {
+    "ticker": "MCHP",
+    "name": "Microchip Technology Incorporated",
+    "market_cap": 50131491907.0
+  },
+  {
+    "ticker": "FER",
+    "name": "Ferrovial N.V. Ordinary Shares",
+    "market_cap": 50023897497.0
+  },
+  {
+    "ticker": "RKLB",
+    "name": "Rocket Lab Corporation",
+    "market_cap": 49441071040.0
+  },
+  {
+    "ticker": "EXC",
+    "name": "Exelon Corporation",
+    "market_cap": 47988461860.0
+  },
+  {
+    "ticker": "ODFL",
+    "name": "Old Dominion Freight Line, Inc.",
+    "market_cap": 45553372708.0
+  },
+  {
+    "ticker": "CCEP",
+    "name": "Coca-Cola Europacific Partners plc Ordinary Shares",
+    "market_cap": 44853464380.0
+  },
+  {
+    "ticker": "TTWO",
+    "name": "Take-Two Interactive Software, Inc.",
+    "market_cap": 43774629136.0
+  },
+  {
+    "ticker": "IDXX",
+    "name": "IDEXX Laboratories, Inc.",
+    "market_cap": 43319386633.0
+  },
+  {
+    "ticker": "KDP",
+    "name": "Keurig Dr Pepper Inc.",
+    "market_cap": 42721567389.0
+  },
+  {
+    "ticker": "ADSK",
+    "name": "Autodesk, Inc.",
+    "market_cap": 40640710000.0
+  },
+  {
+    "ticker": "ALNY",
+    "name": "Alnylam Pharmaceuticals, Inc.",
+    "market_cap": 39260707216.0
+  },
+  {
+    "ticker": "PYPL",
+    "name": "PayPal Holdings, Inc.",
+    "market_cap": 37471841343.0
+  },
+  {
+    "ticker": "AXON",
+    "name": "Axon Enterprise, Inc.",
+    "market_cap": 36813386628.0
+  },
+  {
+    "ticker": "TRI",
+    "name": "Thomson Reuters Corporation Common Shares",
+    "market_cap": 35323918232.0
+  },
+  {
+    "ticker": "PAYX",
+    "name": "Paychex, Inc.",
+    "market_cap": 34503411840.0
+  },
+  {
+    "ticker": "ROP",
+    "name": "Roper Technologies, Inc.",
+    "market_cap": 33464196244.0
+  },
+  {
+    "ticker": "MSTR",
+    "name": "Strategy Inc (Class A)",
+    "market_cap": 32987658191.0
+  },
+  {
+    "ticker": "GEHC",
+    "name": "GE HealthCare Technologies Inc.",
+    "market_cap": 29513379076.0
+  },
+  {
+    "ticker": "WDAY",
+    "name": "Workday, Inc. (Class A)",
+    "market_cap": 29168230000.0
+  },
+  {
+    "ticker": "CPRT",
+    "name": "Copart, Inc. (DE)",
+    "market_cap": 28144669053.0
+  },
+  {
+    "ticker": "KHC",
+    "name": "The Kraft Heinz Company",
+    "market_cap": 27201739016.0
+  },
+  {
+    "ticker": "DXCM",
+    "name": "DexCom, Inc.",
+    "market_cap": 26914640146.0
   }
 ]

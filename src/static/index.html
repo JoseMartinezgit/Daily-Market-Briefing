@@ -134,15 +134,15 @@ tailwind.config = {
         <div id="heatmap-grid" class="grid gap-2" style="grid-template-columns:repeat(4,1fr);"></div>
       </div>
       <div class="panel p-4">
-        <div class="text-xs font-semibold mb-3" style="color:#f59e0b;letter-spacing:0.1em;">⚠ RISKS TO WATCH</div>
-        <div id="risks-container"></div>
+        <div class="text-xs font-semibold mb-3" style="color:#f59e0b;letter-spacing:0.1em;">UPCOMING EARNINGS REPORTS</div>
+        <div id="earnings-board-container" style="max-height:340px;overflow-y:auto;"></div>
       </div>
     </div>
 
     <!-- STOCKS OF THE DAY + TOMORROW'S TOP PICKS -->
     <div class="grid gap-4 mb-4" style="grid-template-columns:1fr 1fr;">
       <div class="panel p-4">
-        <div class="text-xs font-semibold mb-3" style="color:#4ade80;letter-spacing:0.1em;">🏆 STOCKS OF THE DAY (Nasdaq-100)</div>
+        <div class="text-xs font-semibold mb-3" style="color:#4ade80;letter-spacing:0.1em;">🏆 STOCKS OF THE DAY</div>
         <div id="top-movers-container"></div>
       </div>
       <div class="panel p-4">
@@ -334,7 +334,7 @@ function renderAll(data) {
   renderWatchlist(data.watchlist || []);
   renderEarningsReactions(data.earnings_reactions || []);
   renderEarningsCalendar(data.earnings_calendar || []);
-  renderRisks(data.verdict, data.events || [], data.news || []);
+  renderEarningsBoard(data.earnings_board || []);
   renderSourcesBar(data.sources_status || {}, data.failed_sources || []);
   updateLastUpdated(data.last_updated);
 }
@@ -445,7 +445,8 @@ function fmtTechnicals(entry) {
   }
   if (entry.analyst_target_mean != null) {
     const n = entry.num_analysts ? ` · ${entry.num_analysts} analysts` : '';
-    parts.push(`Avg Analyst Target: ${fmtPrice(entry.analyst_target_mean)}${n}`);
+    const consensus = entry.consensus ? ` · ${entry.consensus}` : '';
+    parts.push(`Avg Analyst Target: ${fmtPrice(entry.analyst_target_mean)}${n}${consensus}`);
   }
   return parts.length ? `<div class="text-xs mt-1" style="color:#60a5fa;">${escHtml(parts.join('  ·  '))}</div>` : '';
 }
@@ -679,34 +680,54 @@ function renderEarningsCalendar(calendar) {
 }
 
 // ---------------------------------------------------------------------------
-// Risks to Watch
+// Upcoming Earnings Reports (next 3 trading days)
 // ---------------------------------------------------------------------------
-function renderRisks(verdict, events, news) {
-  const el = document.getElementById('risks-container');
-  const risks = [];
-
-  const vix = verdict && verdict.vix;
-  if (vix && vix > 22) risks.push(`VIX at ${vix.toFixed(1)} — elevated volatility; unexpected news could accelerate moves.`);
-
-  const today = new Date().toISOString().split('T')[0];
-  const now_hour = new Date().getHours();
-  const upcomingHigh = events.filter(e => e.event_date === today && !e.is_past && e.impact_level === 'High');
-  upcomingHigh.slice(0,2).forEach(e => risks.push(`${e.title} at ${e.event_time_ct} could reverse current direction.`));
-
-  const bearishCount = news.filter(n => n.sentiment_label === 'bearish').length;
-  const total = news.length;
-  if (total > 0 && bearishCount / total > 0.55) {
-    risks.push(`News sentiment heavily bearish (${bearishCount}/${total} stories). Watch for sentiment-driven selling.`);
+function renderEarningsBoard(board) {
+  const el = document.getElementById('earnings-board-container');
+  if (!board || !board.length) {
+    el.innerHTML = '<div class="text-xs" style="color:#4b5563;">No earnings calendar data available.</div>';
+    return;
   }
-
-  const bullishCount = news.filter(n => n.sentiment_label === 'bullish').length;
-  if (total > 0 && bullishCount / total > 0.65) {
-    risks.push(`News unusually bullish (${bullishCount}/${total}). Sentiment may be ahead of fundamentals — watch for reversal.`);
-  }
-
-  if (!risks.length) risks.push('No elevated risks identified from current data.');
-
-  el.innerHTML = risks.slice(0,3).map(r => `<div class="risk-item">⚠ ${escHtml(r)}</div>`).join('');
+  el.innerHTML = board.map(day => {
+    if (!day.companies || !day.companies.length) {
+      return `<div class="mb-3">
+        <div class="text-xs font-semibold mb-1" style="color:#94a3b8;">${escHtml(day.day_label)}</div>
+        <div class="text-xs" style="color:#4b5563;">None</div>
+      </div>`;
+    }
+    const cards = day.companies.map(c => {
+      const mcapStr = c.market_cap ? `$${(c.market_cap / 1e9).toFixed(0)}B mkt cap` : '';
+      const nasdaqBadge = c.is_nasdaq100 ? '<span class="badge badge-low" style="margin-left:6px;">NDX-100</span>' : '';
+      const consensusLine = c.analyst_target_mean != null
+        ? `${c.consensus || 'N/A'} · Target ${fmtPrice(c.analyst_target_mean)}${c.num_analysts ? ` (${c.num_analysts} analysts)` : ''}`
+        : 'No analyst data';
+      const beatLine = c.beat_rate ? `Beat estimates ${c.beat_rate} times in last ${c.history.length} reports` : 'No recent earnings history';
+      const historyChips = (c.history || []).map(h => {
+        if (h.reaction_pct == null) return `<span class="ticker-chip" title="${h.date}">${h.beat === true ? '✓' : h.beat === false ? '✗' : '—'}</span>`;
+        const cls = h.reaction_pct >= 0 ? 'up' : 'down';
+        const arrow = h.reaction_pct >= 0 ? '▲' : '▼';
+        const beatMark = h.beat === true ? '✓' : h.beat === false ? '✗' : '';
+        return `<span class="ticker-chip ${cls}" title="${h.date} (${h.time})">${beatMark}${arrow}${Math.abs(h.reaction_pct).toFixed(1)}%</span>`;
+      }).join(' ');
+      return `<div class="py-2" style="border-bottom:1px solid #1e2535;">
+        <div class="flex items-center justify-between flex-wrap gap-1">
+          <div>
+            <span class="font-mono font-bold text-xs">${escHtml(c.ticker)}</span>
+            <span class="text-xs ml-1" style="color:#8892a4;">${escHtml(c.name)}</span>
+            ${nasdaqBadge}
+          </div>
+          <div class="text-xs" style="color:#6b7280;">${mcapStr}</div>
+        </div>
+        <div class="text-xs mt-1" style="color:#60a5fa;">${escHtml(consensusLine)}</div>
+        <div class="text-xs mt-0.5" style="color:#6b7280;">${escHtml(beatLine)}</div>
+        <div class="flex gap-1 flex-wrap mt-1">${historyChips}</div>
+      </div>`;
+    }).join('');
+    return `<div class="mb-3">
+      <div class="text-xs font-semibold mb-1" style="color:#94a3b8;">${escHtml(day.day_label)}</div>
+      ${cards}
+    </div>`;
+  }).join('');
 }
 
 // ---------------------------------------------------------------------------
